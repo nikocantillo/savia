@@ -1,0 +1,97 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-supplypulse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-supplypulse}
+      POSTGRES_DB: ${POSTGRES_DB:-supplypulse}
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U supplypulse"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build:
+      context: ../../apps/api
+      dockerfile: Dockerfile
+    command: >
+      sh -c "alembic upgrade head && python seed.py && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../../apps/api:/app
+      - upload_data:/app/uploads
+    env_file:
+      - ../../.env.example
+    environment:
+      - SEED_DATA=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ../../apps/api
+      dockerfile: Dockerfile
+    command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=2
+    volumes:
+      - ../../apps/api:/app
+      - upload_data:/app/uploads
+    env_file:
+      - ../../.env.example
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  beat:
+    build:
+      context: ../../apps/api
+      dockerfile: Dockerfile
+    command: celery -A app.tasks.celery_app beat --loglevel=info
+    volumes:
+      - ../../apps/api:/app
+    env_file:
+      - ../../.env.example
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ../../apps/web
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../../apps/web:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  upload_data:

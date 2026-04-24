@@ -1,0 +1,40 @@
+# ── Dependencies ──────────────────────────────────────────────────
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# ── Build artifacts ───────────────────────────────────────────────
+.next/
+.vercel/
+*.egg-info/
+dist/
+build/
+
+# ── Environment & secrets ────────────────────────────────────────
+.env
+.env.local
+.env.production
+.env.*.local
+
+# ── IDE ──────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── OS ───────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Uploads & data ───────────────────────────────────────────────
+apps/api/uploads/
+*.sqlite3
+
+# ── Docker volumes ───────────────────────────────────────────────
+pgdata/
+
+# ── Celery ───────────────────────────────────────────────────────
+celerybeat-schedule
+celerybeat-schedule.db
