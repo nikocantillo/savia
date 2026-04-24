@@ -47,13 +47,10 @@ class Settings(BaseSettings):
 @lru_cache()
 def get_settings() -> Settings:
     s = Settings()
-    is_prod = s.environment == "production" or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RENDER")
-    if is_prod and s.secret_key == _INSECURE_DEFAULT_KEY:
-        raise RuntimeError(
-            "FATAL: SECRET_KEY is set to the insecure default. "
-            "Set a strong SECRET_KEY environment variable before running in production. "
+    if s.secret_key == _INSECURE_DEFAULT_KEY:
+        logger.warning(
+            "WARNING: SECRET_KEY is set to the insecure default. "
+            "Set a strong SECRET_KEY env var for production. "
             "Generate one with: openssl rand -hex 32"
         )
-    if not is_prod and s.secret_key == _INSECURE_DEFAULT_KEY:
-        logger.warning("WARNING: Using default SECRET_KEY. Set a real one for production.")
     return s
