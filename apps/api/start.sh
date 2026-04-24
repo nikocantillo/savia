@@ -1,6 +1,10 @@
 #!/bin/sh
 set -e
 
+echo "==> ENV check: DATABASE_URL is ${DATABASE_URL:+SET}${DATABASE_URL:-NOT SET}"
+echo "==> ENV check: SECRET_KEY is ${SECRET_KEY:+SET}${SECRET_KEY:-NOT SET}"
+echo "==> ENV check: ENVIRONMENT is ${ENVIRONMENT:-not defined}"
+
 echo "==> Running database migrations..."
 alembic upgrade head
 
