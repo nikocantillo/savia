@@ -181,7 +181,7 @@ export default function ChatPage() {
             <Sparkles className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <h1 className="text-sm font-semibold">Savia AI</h1>
+            <h1 className="text-sm font-semibold">Savia IA</h1>
             <p className="text-xs text-muted-foreground">Asistente de compras</p>
           </div>
         </div>
@@ -256,7 +256,7 @@ export default function ChatPage() {
                 {/* Content */}
                 <div className="flex-1 min-w-0 space-y-1">
                   <p className="text-xs font-medium text-muted-foreground">
-                    {msg.role === "assistant" ? "Savia AI" : "Tú"}
+                    {msg.role === "assistant" ? "Savia IA" : "Tú"}
                   </p>
                   <div className="text-sm leading-relaxed prose-sm">
                     {renderMarkdown(msg.content)}
@@ -273,7 +273,7 @@ export default function ChatPage() {
                 </div>
                 <div className="flex-1 space-y-1">
                   <p className="text-xs font-medium text-muted-foreground">
-                    Savia AI
+                    Savia IA
                   </p>
                   <div className="flex items-center gap-2 py-2">
                     <div className="flex gap-1">
@@ -338,7 +338,7 @@ export default function ChatPage() {
             </Button>
           </form>
           <p className="text-[10px] text-muted-foreground text-center mt-2">
-            Savia AI puede cometer errores. Verifica la información importante.
+            Savia IA puede cometer errores. Verifica la información importante.
           </p>
         </div>
       </div>

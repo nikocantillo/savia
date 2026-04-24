@@ -23,7 +23,7 @@ interface Message {
 const WELCOME_MESSAGE: Message = {
   role: "assistant",
   content:
-    "👋 ¡Hola! Soy **Savia AI**, tu asistente de compras. Puedo ayudarte a:\n\n" +
+    "👋 ¡Hola! Soy **Savia IA**, tu asistente de compras. Puedo ayudarte a:\n\n" +
     "• 📊 Analizar tu gasto por proveedor\n" +
     "• 📈 Ver historial de precios\n" +
     "• 🔍 Buscar facturas\n" +
@@ -147,7 +147,7 @@ export function AgentChat() {
       <button
         onClick={() => setOpen(true)}
         className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-105 transition-all z-50 flex items-center justify-center group"
-        title="Chat con Savia AI"
+        title="Chat con Savia IA"
       >
         <MessageCircle className="h-6 w-6 group-hover:hidden" />
         <Sparkles className="h-6 w-6 hidden group-hover:block" />
@@ -163,8 +163,8 @@ export function AgentChat() {
       <div className="flex items-center justify-between px-4 py-3 border-b bg-primary text-primary-foreground">
         <div className="flex items-center gap-2">
           <Bot className="h-5 w-5" />
-          <span className="font-semibold text-sm">Savia AI</span>
-          <span className="text-xs opacity-75">Agent</span>
+          <span className="font-semibold text-sm">Savia IA</span>
+          <span className="text-xs opacity-75">Agente</span>
         </div>
         <div className="flex items-center gap-1">
           <button

@@ -123,7 +123,7 @@ export default function SuppliersPage() {
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
               <Input
-                placeholder="RUT / Tax ID"
+                placeholder="RUT / ID Fiscal"
                 value={form.tax_id}
                 onChange={(e) => setForm({ ...form, tax_id: e.target.value })}
               />

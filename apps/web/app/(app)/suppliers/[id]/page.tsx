@@ -173,7 +173,7 @@ export default function SupplierDetailPage() {
             </DialogHeader>
             <div className="space-y-3">
               <Input placeholder="Nombre *" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
-              <Input placeholder="RUT / Tax ID" value={editForm.tax_id} onChange={(e) => setEditForm({ ...editForm, tax_id: e.target.value })} />
+              <Input placeholder="RUT / ID Fiscal" value={editForm.tax_id} onChange={(e) => setEditForm({ ...editForm, tax_id: e.target.value })} />
               <Input placeholder="Contacto" value={editForm.contact_name} onChange={(e) => setEditForm({ ...editForm, contact_name: e.target.value })} />
               <Input placeholder="Email" value={editForm.contact_email} onChange={(e) => setEditForm({ ...editForm, contact_email: e.target.value })} />
               <Input placeholder="Teléfono" value={editForm.contact_phone} onChange={(e) => setEditForm({ ...editForm, contact_phone: e.target.value })} />

@@ -37,11 +37,11 @@ function SpendTooltip({ active, payload, label }: any) {
     <div className="rounded-lg border bg-background p-3 shadow-md">
       <p className="text-sm font-semibold mb-1">{payload[0]?.payload?.fullName || label}</p>
       <p className="text-sm text-primary">
-        Spend: <span className="font-bold">{formatCurrency(payload[0]?.value)}</span>
+        Gasto: <span className="font-bold">{formatCurrency(payload[0]?.value)}</span>
       </p>
       {payload[0]?.payload?.invoices != null && (
         <p className="text-xs text-muted-foreground">
-          {payload[0].payload.invoices} invoice{payload[0].payload.invoices !== 1 ? "s" : ""}
+          {payload[0].payload.invoices} factura{payload[0].payload.invoices !== 1 ? "s" : ""}
         </p>
       )}
     </div>
@@ -56,13 +56,13 @@ function IncreaseTooltip({ active, payload, label }: any) {
     <div className="rounded-lg border bg-background p-3 shadow-md">
       <p className="text-sm font-semibold mb-1">{data?.fullName || label}</p>
       <p className="text-sm">
-        Avg price: <span className="font-bold">{formatCurrency(data?.oldPrice)}</span>
+        Precio promedio: <span className="font-bold">{formatCurrency(data?.oldPrice)}</span>
       </p>
       <p className="text-sm">
-        Latest: <span className="font-bold">{formatCurrency(data?.newPrice)}</span>
+        Último: <span className="font-bold">{formatCurrency(data?.newPrice)}</span>
       </p>
       <p className="text-sm text-destructive font-semibold">
-        +{data?.pct?.toFixed(1)}% increase
+        +{data?.pct?.toFixed(1)}% de aumento
       </p>
     </div>
   );
@@ -75,11 +75,11 @@ function HistoryTooltip({ active, payload, label }: any) {
     <div className="rounded-lg border bg-background p-3 shadow-md">
       <p className="text-sm font-semibold mb-1">{label}</p>
       <p className="text-sm text-primary">
-        Price: <span className="font-bold">{formatCurrency(payload[0]?.value)}</span>
+        Precio: <span className="font-bold">{formatCurrency(payload[0]?.value)}</span>
       </p>
       {payload[0]?.payload?.supplier && (
         <p className="text-xs text-muted-foreground">
-          Supplier: {payload[0].payload.supplier}
+          Proveedor: {payload[0].payload.supplier}
         </p>
       )}
     </div>
@@ -96,7 +96,7 @@ function PieTooltip({ active, payload }: any) {
       <p className="text-sm text-primary">
         <span className="font-bold">{formatCurrency(data?.spend)}</span>
       </p>
-      <p className="text-xs text-muted-foreground">{data?.pct?.toFixed(1)}% of total</p>
+      <p className="text-xs text-muted-foreground">{data?.pct?.toFixed(1)}% del total</p>
     </div>
   );
 }
@@ -170,7 +170,7 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center gap-3 text-muted-foreground py-12 justify-center">
         <Loader2 className="h-5 w-5 animate-spin" />
-        Cargando dashboard...
+        Cargando panel...
       </div>
     );
   }
@@ -229,18 +229,18 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Overview of your procurement data</p>
+          <h1 className="text-3xl font-bold">Panel</h1>
+          <p className="text-muted-foreground">Resumen de tus compras y proveedores</p>
         </div>
         <Select value={days} onValueChange={setDays}>
           <SelectTrigger className="w-[140px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="7">Last 7 days</SelectItem>
-            <SelectItem value="30">Last 30 days</SelectItem>
-            <SelectItem value="90">Last 90 days</SelectItem>
-            <SelectItem value="365">Last year</SelectItem>
+            <SelectItem value="7">Últimos 7 días</SelectItem>
+            <SelectItem value="30">Últimos 30 días</SelectItem>
+            <SelectItem value="90">Últimos 90 días</SelectItem>
+            <SelectItem value="365">Último año</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -249,63 +249,63 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Spend</CardTitle>
+            <CardTitle className="text-sm font-medium">Gasto Total</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(summary.total_spend)}</div>
-            <p className="text-xs text-muted-foreground">Last {days} days</p>
+            <p className="text-xs text-muted-foreground">Últimos {days} días</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Invoices</CardTitle>
+            <CardTitle className="text-sm font-medium">Facturas</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{summary.total_invoices}</div>
-            <p className="text-xs text-muted-foreground">Processed</p>
+            <p className="text-xs text-muted-foreground">Procesadas</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Active Suppliers</CardTitle>
+            <CardTitle className="text-sm font-medium">Proveedores Activos</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{summary.active_suppliers}</div>
-            <p className="text-xs text-muted-foreground">Last {days} days</p>
+            <p className="text-xs text-muted-foreground">Últimos {days} días</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Price Alerts</CardTitle>
+            <CardTitle className="text-sm font-medium">Alertas de Precio</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{summary.top_price_increases.length}</div>
-            <p className="text-xs text-muted-foreground">Items with increases</p>
+            <p className="text-xs text-muted-foreground">Productos con alzas</p>
           </CardContent>
         </Card>
       </div>
 
       <Tabs defaultValue="spend" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="spend">Spend by Supplier</TabsTrigger>
-          <TabsTrigger value="increases">Price Increases</TabsTrigger>
-          <TabsTrigger value="history">Price History</TabsTrigger>
+          <TabsTrigger value="spend">Gasto por Proveedor</TabsTrigger>
+          <TabsTrigger value="increases">Subidas de Precio</TabsTrigger>
+          <TabsTrigger value="history">Historial de Precios</TabsTrigger>
         </TabsList>
 
         {/* ── Spend by supplier ──────────────────────────────────── */}
         <TabsContent value="spend">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Spend by Supplier</CardTitle>
-              <CardDescription>Top suppliers by total spend in the last {days} days</CardDescription>
+              <CardTitle className="text-lg">Gasto por Proveedor</CardTitle>
+              <CardDescription>Principales proveedores por gasto en los últimos {days} días</CardDescription>
             </CardHeader>
             <CardContent>
               {spendChartData.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No data yet</p>
+                <p className="text-muted-foreground text-center py-8">Aún no hay datos</p>
               ) : (
                 <div className="space-y-6">
                   {/* Two-column layout: Pie chart + table */}
@@ -378,10 +378,10 @@ export default function DashboardPage() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b bg-muted/50">
-                          <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Supplier</th>
-                          <th className="px-4 py-2.5 text-right font-medium text-muted-foreground">Total Spend</th>
-                          <th className="px-4 py-2.5 text-right font-medium text-muted-foreground">Invoices</th>
-                          <th className="px-4 py-2.5 text-right font-medium text-muted-foreground">% of Total</th>
+                          <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Proveedor</th>
+                          <th className="px-4 py-2.5 text-right font-medium text-muted-foreground">Gasto Total</th>
+                          <th className="px-4 py-2.5 text-right font-medium text-muted-foreground">Facturas</th>
+                          <th className="px-4 py-2.5 text-right font-medium text-muted-foreground">% del Total</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -414,12 +414,12 @@ export default function DashboardPage() {
         <TabsContent value="increases">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Top Price Increases</CardTitle>
-              <CardDescription>Items with the largest unit price increases (click to see history)</CardDescription>
+              <CardTitle className="text-lg">Mayores Subidas de Precio</CardTitle>
+              <CardDescription>Productos con mayor incremento de precio unitario (clic para ver historial)</CardDescription>
             </CardHeader>
             <CardContent>
               {increaseChartData.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No significant price increases detected</p>
+                <p className="text-muted-foreground text-center py-8">No se detectaron subidas de precio significativas</p>
               ) : (
                 <div className="space-y-6">
                   {/* Horizontal bar chart of % increases */}
@@ -494,10 +494,10 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
                   <CardTitle className="text-lg">
-                    {priceHistory ? `Price History: ${priceHistory.item_name}` : "Price History"}
+                    {priceHistory ? `Historial: ${priceHistory.item_name}` : "Historial de Precios"}
                   </CardTitle>
                   <CardDescription>
-                    Select a master item to see how its unit price changed over time
+                    Selecciona un producto para ver cómo varió su precio unitario
                   </CardDescription>
                 </div>
                 <Select
@@ -505,7 +505,7 @@ export default function DashboardPage() {
                   onValueChange={(val) => setSelectedItem(val || null)}
                 >
                   <SelectTrigger className="w-[250px]">
-                    <SelectValue placeholder="Select an item..." />
+                    <SelectValue placeholder="Selecciona un producto..." />
                   </SelectTrigger>
                   <SelectContent>
                     {masterItems.map((mi) => (
@@ -519,15 +519,15 @@ export default function DashboardPage() {
               {!selectedItem && (
                 <div className="text-center py-12 text-muted-foreground">
                   <TrendingUp className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                  <p>Select an item above to see its price trend</p>
-                  <p className="text-xs mt-1">Or click on an item in the &quot;Price Increases&quot; tab</p>
+                  <p>Selecciona un producto arriba para ver su tendencia de precio</p>
+                  <p className="text-xs mt-1">O haz clic en un producto en la pestaña &laquo;Subidas de Precio&raquo;</p>
                 </div>
               )}
 
               {selectedItem && historyLoading && (
                 <div className="flex items-center gap-2 justify-center py-12 text-muted-foreground">
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  Loading price history...
+                  Cargando historial de precios...
                 </div>
               )}
 
@@ -535,7 +535,7 @@ export default function DashboardPage() {
                 <ResponsiveContainer width="100%" height={350}>
                   <LineChart
                     data={priceHistory.prices.map((p) => ({
-                      date: new Date(p.date).toLocaleDateString("en-US", {
+                      date: new Date(p.date).toLocaleDateString("es-CL", {
                         month: "short",
                         day: "numeric",
                       }),
@@ -566,7 +566,7 @@ export default function DashboardPage() {
 
               {priceHistory && !historyLoading && priceHistory.prices.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
-                  <p>No price history data available for this item</p>
+                  <p>No hay historial de precios para este producto</p>
                 </div>
               )}
             </CardContent>

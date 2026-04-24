@@ -23,7 +23,11 @@ const statusVariant: Record<string, "default" | "secondary" | "success" | "warni
   failed: "destructive",
 };
 
-const POLL_INTERVAL = 3000; // 3 seconds
+const statusLabel: Record<string, string> = {
+  pending: "Pendiente", processing: "Procesando", completed: "Completada", failed: "Con error",
+};
+
+const POLL_INTERVAL = 3000;
 
 export default function InvoiceDetailPage() {
   const params = useParams();
@@ -142,7 +146,7 @@ export default function InvoiceDetailPage() {
       setSelectedMasterItemId("");
       setNewMasterItemName("");
     } catch (err: any) {
-      alert(err.message || "Failed to map item");
+      alert(err.message || "No se pudo vincular el producto");
     } finally {
       setMappingLoading(false);
     }
@@ -181,7 +185,7 @@ export default function InvoiceDetailPage() {
       await api.del(`/invoices/${invoiceId}`);
       router.push("/invoices");
     } catch (err: any) {
-      alert(err.message || "Failed to delete invoice");
+      alert(err.message || "No se pudo eliminar la factura");
       setDeleting(false);
     }
   };
@@ -190,13 +194,13 @@ export default function InvoiceDetailPage() {
     return (
       <div className="flex items-center gap-3 text-muted-foreground py-12 justify-center">
         <Loader2 className="h-5 w-5 animate-spin" />
-        Loading invoice...
+        Cargando factura...
       </div>
     );
   }
 
   if (!invoice) {
-    return <div className="text-destructive">Invoice not found</div>;
+    return <div className="text-destructive">Factura no encontrada</div>;
   }
 
   return (
@@ -211,10 +215,10 @@ export default function InvoiceDetailPage() {
             {isProcessing(invoice.status) ? (
               <span className="flex items-center gap-3">
                 <Loader2 className="h-6 w-6 animate-spin text-yellow-500" />
-                Processing invoice...
+                Procesando factura...
               </span>
             ) : (
-              invoice.supplier_name || "Invoice"
+              invoice.supplier_name || "Factura"
             )}
           </h1>
           <p className="text-muted-foreground">
@@ -233,7 +237,7 @@ export default function InvoiceDetailPage() {
             {invoice.status === "failed" && (
               <XCircle className="mr-1 h-3 w-3" />
             )}
-            {invoice.status}
+            {statusLabel[invoice.status] || invoice.status}
           </Badge>
           <Button
             variant="outline"
@@ -242,7 +246,7 @@ export default function InvoiceDetailPage() {
             onClick={() => setShowDeleteDialog(true)}
           >
             <Trash2 className="mr-1.5 h-4 w-4" />
-            Delete
+            Eliminar
           </Button>
         </div>
       </div>
@@ -253,10 +257,10 @@ export default function InvoiceDetailPage() {
           <Loader2 className="h-5 w-5 animate-spin text-yellow-600 dark:text-yellow-400" />
           <div>
             <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-              Extracting invoice data...
+              Extrayendo datos de la factura...
             </p>
             <p className="text-xs text-yellow-600 dark:text-yellow-400">
-              OCR and AI are analyzing the document. This page will update automatically.
+              OCR e IA están analizando el documento. Esta página se actualizará automáticamente.
             </p>
           </div>
         </div>
@@ -280,7 +284,7 @@ export default function InvoiceDetailPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Currency</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Moneda</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{invoice.currency}</p>
@@ -288,7 +292,7 @@ export default function InvoiceDetailPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Line Items</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Líneas</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
@@ -387,21 +391,21 @@ export default function InvoiceDetailPage() {
       {/* Line items table */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Extracted Line Items</CardTitle>
-          <CardDescription>Click &quot;Map&quot; to assign a line item to a master product</CardDescription>
+          <CardTitle className="text-lg">Líneas Extraídas</CardTitle>
+          <CardDescription>Haz clic en &quot;Vincular&quot; para asignar una línea a un producto maestro</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Description</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Master Item</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Qty</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Unit</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Unit Price</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Descripción</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Producto Maestro</th>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Cant.</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Unidad</th>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Precio Unit.</th>
                   <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Total</th>
-                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Action</th>
+                  <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Acción</th>
                 </tr>
               </thead>
               <tbody>
@@ -417,7 +421,7 @@ export default function InvoiceDetailPage() {
                       {li.master_item_name ? (
                         <Badge variant="outline">{li.master_item_name}</Badge>
                       ) : (
-                        <span className="text-xs text-muted-foreground italic">Unmapped</span>
+                        <span className="text-xs text-muted-foreground italic">Sin vincular</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right text-sm">{li.quantity || "—"}</td>
@@ -435,7 +439,7 @@ export default function InvoiceDetailPage() {
                         }}
                       >
                         <Link2 className="mr-1 h-3 w-3" />
-                        Map
+                        Vincular
                       </Button>
                     </td>
                   </tr>
@@ -447,12 +451,12 @@ export default function InvoiceDetailPage() {
                         <div className="flex flex-col items-center gap-3">
                           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground/50" />
                           <div>
-                            <p className="font-medium">Extracting line items...</p>
-                            <p className="text-xs">AI is analyzing the invoice. Results will appear here automatically.</p>
+                            <p className="font-medium">Extrayendo líneas...</p>
+                            <p className="text-xs">La IA está analizando la factura. Los resultados aparecerán aquí automáticamente.</p>
                           </div>
                         </div>
                       ) : (
-                        "No line items extracted."
+                        "No se extrajeron líneas de detalle."
                       )}
                     </td>
                   </tr>
@@ -467,17 +471,17 @@ export default function InvoiceDetailPage() {
       <Dialog open={!!mappingLineItem} onOpenChange={(open) => !open && setMappingLineItem(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Map Line Item</DialogTitle>
+            <DialogTitle>Vincular Línea</DialogTitle>
             <DialogDescription>
-              Assign &quot;{mappingLineItem?.raw_description}&quot; to a master product
+              Asignar &quot;{mappingLineItem?.raw_description}&quot; a un producto maestro
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Select existing master item</label>
+              <label className="text-sm font-medium">Seleccionar producto maestro existente</label>
               <Select value={selectedMasterItemId} onValueChange={setSelectedMasterItemId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Choose a master item..." />
+                  <SelectValue placeholder="Elige un producto maestro..." />
                 </SelectTrigger>
                 <SelectContent>
                   {masterItems.map((mi) => (
@@ -485,7 +489,7 @@ export default function InvoiceDetailPage() {
                   ))}
                   <SelectItem value="__new__">
                     <span className="flex items-center gap-1">
-                      <Plus className="h-3 w-3" /> Create new item
+                      <Plus className="h-3 w-3" /> Crear producto nuevo
                     </span>
                   </SelectItem>
                 </SelectContent>
@@ -494,18 +498,18 @@ export default function InvoiceDetailPage() {
 
             {selectedMasterItemId === "__new__" && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">New master item name</label>
+                <label className="text-sm font-medium">Nombre del nuevo producto</label>
                 <Input
                   value={newMasterItemName}
                   onChange={(e) => setNewMasterItemName(e.target.value)}
-                  placeholder="e.g. Chicken Breast 5kg"
+                  placeholder="Ej.: Pechuga de pollo 5kg"
                 />
               </div>
             )}
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setMappingLineItem(null)}>
-                Cancel
+                Cancelar
               </Button>
               <Button
                 onClick={handleMapItem}
@@ -515,7 +519,7 @@ export default function InvoiceDetailPage() {
                   (selectedMasterItemId === "__new__" && !newMasterItemName)
                 }
               >
-                {mappingLoading ? "Saving..." : "Save Mapping"}
+                {mappingLoading ? "Guardando..." : "Guardar Vinculación"}
               </Button>
             </div>
           </div>
@@ -576,35 +580,35 @@ export default function InvoiceDetailPage() {
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Invoice</DialogTitle>
+            <DialogTitle>Eliminar Factura</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this invoice? This will also remove all extracted line items. This action cannot be undone.
+              ¿Estás seguro de que deseas eliminar esta factura? También se eliminarán todas las líneas extraídas. Esta acción no se puede deshacer.
             </DialogDescription>
           </DialogHeader>
           <div className="rounded-lg border p-3 bg-muted/50 text-sm space-y-1">
-            <p><span className="font-medium">Supplier:</span> {invoice.supplier_name || "Unknown"}</p>
+            <p><span className="font-medium">Proveedor:</span> {invoice.supplier_name || "Desconocido"}</p>
             {invoice.invoice_number && (
-              <p><span className="font-medium">Invoice #:</span> {invoice.invoice_number}</p>
+              <p><span className="font-medium">N° Factura:</span> {invoice.invoice_number}</p>
             )}
             {invoice.total && (
               <p><span className="font-medium">Total:</span> {formatCurrency(invoice.total, invoice.currency)}</p>
             )}
-            <p><span className="font-medium">Line items:</span> {invoice.line_items.length}</p>
+            <p><span className="font-medium">Líneas:</span> {invoice.line_items.length}</p>
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setShowDeleteDialog(false)} disabled={deleting}>
-              Cancel
+              Cancelar
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
               {deleting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting...
+                  Eliminando...
                 </>
               ) : (
                 <>
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Invoice
+                  Eliminar Factura
                 </>
               )}
             </Button>

@@ -149,7 +149,7 @@ export default function OnboardingPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium">Objetivo de Food Cost (%)</label>
+                <label className="text-sm font-medium">Objetivo de Costo de Alimentos (%)</label>
                 <Input
                   type="number"
                   min="1" max="99"
@@ -198,7 +198,7 @@ export default function OnboardingPage() {
               <div className="rounded-lg border p-4 space-y-2 text-sm">
                 {form.organization_name && <p><strong>Empresa:</strong> {form.organization_name}</p>}
                 <p><strong>Sucursales:</strong> {form.branches.filter(b => b.trim()).length || "Ninguna aún"}</p>
-                <p><strong>Food Cost objetivo:</strong> {form.food_cost_target_pct}%</p>
+                <p><strong>Costo de Alimentos objetivo:</strong> {form.food_cost_target_pct}%</p>
                 <p><strong>Umbral de alertas:</strong> {form.alert_threshold_pct}%</p>
               </div>
               <p className="text-sm text-muted-foreground">

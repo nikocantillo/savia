@@ -103,7 +103,7 @@ export default function MarginPage() {
         <div>
           <h1 className="text-3xl font-bold">Control de Margen</h1>
           <p className="text-muted-foreground">
-            Food cost vs ingresos · Objetivo: {data.food_cost_target_pct}% food cost
+            Costo de alimentos vs ingresos · Objetivo: {data.food_cost_target_pct}%
           </p>
         </div>
         <div className="flex gap-2">
@@ -186,7 +186,7 @@ export default function MarginPage() {
                   {foodCostPct.toFixed(1)}%
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Food Cost (objetivo: {data.food_cost_target_pct}%)
+                  Costo de Alimentos (objetivo: {data.food_cost_target_pct}%)
                 </p>
               </div>
             </div>

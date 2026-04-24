@@ -19,7 +19,11 @@ const statusVariant: Record<string, "default" | "secondary" | "success" | "warni
   failed: "destructive",
 };
 
-const POLL_INTERVAL = 3000; // 3 seconds
+const statusLabel: Record<string, string> = {
+  pending: "Pendiente", processing: "Procesando", completed: "Completada", failed: "Con error",
+};
+
+const POLL_INTERVAL = 3000;
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
@@ -98,7 +102,7 @@ export default function InvoicesPage() {
       const fresh = await fetchInvoices();
       managePoll(fresh);
     } catch (err: any) {
-      alert(err.message || "Upload failed");
+      alert(err.message || "Error al subir la factura");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -113,7 +117,7 @@ export default function InvoicesPage() {
       setDeleteTarget(null);
       await fetchInvoices();
     } catch (err: any) {
-      alert(err.message || "Failed to delete invoice");
+      alert(err.message || "No se pudo eliminar la factura");
     } finally {
       setDeleting(false);
     }
@@ -127,8 +131,8 @@ export default function InvoicesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Invoices</h1>
-          <p className="text-muted-foreground">Upload and manage supplier invoices</p>
+          <h1 className="text-3xl font-bold">Facturas</h1>
+          <p className="text-muted-foreground">Carga y gestiona facturas de proveedores</p>
         </div>
         <div>
           <input
@@ -140,7 +144,7 @@ export default function InvoicesPage() {
           />
           <Button onClick={() => fileInputRef.current?.click()} disabled={uploading}>
             <Upload className="mr-2 h-4 w-4" />
-            {uploading ? "Uploading..." : "Upload Invoice"}
+            {uploading ? "Subiendo..." : "Subir Factura"}
           </Button>
         </div>
       </div>
@@ -151,21 +155,21 @@ export default function InvoicesPage() {
           <Loader2 className="h-4 w-4 animate-spin text-yellow-600 dark:text-yellow-400" />
           <span className="text-yellow-800 dark:text-yellow-200">
             {pendingCount === 1
-              ? "1 invoice is being processed..."
-              : `${pendingCount} invoices are being processed...`}
-            <span className="ml-1 text-yellow-600 dark:text-yellow-400">Auto-refreshing</span>
+              ? "1 factura se está procesando..."
+              : `Se están procesando ${pendingCount} facturas...`}
+            <span className="ml-1 text-yellow-600 dark:text-yellow-400">Actualización automática</span>
           </span>
         </div>
       )}
 
       {loading ? (
-        <div className="animate-pulse text-muted-foreground">Loading invoices...</div>
+        <div className="animate-pulse text-muted-foreground">Cargando facturas...</div>
       ) : invoices.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FileText className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <p className="text-lg font-medium">No invoices yet</p>
-            <p className="text-muted-foreground">Upload your first invoice to get started</p>
+            <p className="text-lg font-medium">Aún no hay facturas</p>
+            <p className="text-muted-foreground">Sube tu primera factura para comenzar</p>
           </CardContent>
         </Card>
       ) : (
@@ -175,12 +179,12 @@ export default function InvoicesPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Supplier</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Invoice #</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Date</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Proveedor</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">N° Factura</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Fecha</th>
                     <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Total</th>
-                    <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Status</th>
-                    <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
+                    <th className="px-4 py-3 text-center text-sm font-medium text-muted-foreground">Estado</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -195,7 +199,7 @@ export default function InvoicesPage() {
                         {inv.status === "pending" || inv.status === "processing" ? (
                           <span className="flex items-center gap-2">
                             <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                            {inv.supplier_name || "Extracting..."}
+                            {inv.supplier_name || "Extrayendo..."}
                           </span>
                         ) : (
                           inv.supplier_name || "—"
@@ -209,7 +213,7 @@ export default function InvoicesPage() {
                           {inv.status === "processing" && (
                             <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                           )}
-                          {inv.status}
+                          {statusLabel[inv.status] || inv.status}
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -242,16 +246,16 @@ export default function InvoicesPage() {
       <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Invoice</DialogTitle>
+            <DialogTitle>Eliminar Factura</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this invoice? This will also remove all extracted line items. This action cannot be undone.
+              ¿Estás seguro de que deseas eliminar esta factura? También se eliminarán todas las líneas extraídas. Esta acción no se puede deshacer.
             </DialogDescription>
           </DialogHeader>
           {deleteTarget && (
             <div className="rounded-lg border p-3 bg-muted/50 text-sm space-y-1">
-              <p><span className="font-medium">Supplier:</span> {deleteTarget.supplier_name || "Unknown"}</p>
+              <p><span className="font-medium">Proveedor:</span> {deleteTarget.supplier_name || "Desconocido"}</p>
               {deleteTarget.invoice_number && (
-                <p><span className="font-medium">Invoice #:</span> {deleteTarget.invoice_number}</p>
+                <p><span className="font-medium">N° Factura:</span> {deleteTarget.invoice_number}</p>
               )}
               {deleteTarget.total && (
                 <p><span className="font-medium">Total:</span> {formatCurrency(deleteTarget.total, deleteTarget.currency)}</p>
@@ -260,18 +264,18 @@ export default function InvoicesPage() {
           )}
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deleting}>
-              Cancel
+              Cancelar
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
               {deleting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting...
+                  Eliminando...
                 </>
               ) : (
                 <>
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Invoice
+                  Eliminar Factura
                 </>
               )}
             </Button>

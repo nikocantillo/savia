@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Panel", icon: LayoutDashboard },
   { href: "/invoices", label: "Facturas", icon: FileText },
   { href: "/suppliers", label: "Proveedores", icon: Building2 },
   { href: "/payments", label: "Cuentas por Pagar", icon: CreditCard },
@@ -31,7 +31,7 @@ const navItems = [
   { href: "/branches", label: "Sucursales y Ventas", icon: Store },
   { href: "/prices", label: "Precios", icon: TrendingUp },
   { href: "/reports", label: "Reportes", icon: BarChart3 },
-  { href: "/chat", label: "Savia AI", icon: MessageSquare },
+  { href: "/chat", label: "Savia IA", icon: MessageSquare },
   { href: "/alerts", label: "Alertas", icon: Bell },
   { href: "/settings", label: "Configuración", icon: Settings },
 ];

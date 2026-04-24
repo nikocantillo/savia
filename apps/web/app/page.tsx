@@ -17,7 +17,7 @@ export default function Home() {
 
   return (
     <div className="flex h-screen items-center justify-center">
-      <div className="animate-pulse text-lg text-muted-foreground">Loading...</div>
+      <div className="animate-pulse text-lg text-muted-foreground">Cargando...</div>
     </div>
   );
 }
