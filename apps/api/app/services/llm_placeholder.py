@@ -63,14 +63,17 @@ Return the JSON object only, no other text."""
 # Public interface
 # ═══════════════════════════════════════════════════════════════════
 
-def llm_extract_to_json(raw_text: str) -> InvoiceExtracted:
+def llm_extract_to_json(raw_text: str, image_path: str | None = None) -> InvoiceExtracted:
     """
     Given raw text extracted from an invoice, return structured data.
     Dispatches to the configured provider (openai / mock).
+    If image_path is provided and text is insufficient, uses OpenAI Vision.
     """
     provider = settings.llm_provider.lower().strip()
 
     if provider == "openai":
+        if image_path and len(raw_text.strip()) < 30:
+            return _extract_with_openai_vision(image_path, raw_text)
         return _extract_with_openai(raw_text)
     else:
         logger.info("Using mock provider (set LLM_PROVIDER=openai to use OpenAI)")
@@ -157,6 +160,86 @@ def _extract_with_openai(raw_text: str) -> InvoiceExtracted:
     except Exception as e:
         logger.error("OpenAI extraction failed: %s", e)
         return _extract_mock(raw_text)
+
+
+def _extract_with_openai_vision(image_path: str, fallback_text: str = "") -> InvoiceExtracted:
+    """Send image directly to OpenAI Vision API for extraction."""
+    import base64
+    from openai import OpenAI
+
+    api_key = settings.openai_api_key
+    if not api_key:
+        logger.error("OPENAI_API_KEY not set — falling back to mock")
+        return _extract_mock(fallback_text)
+
+    try:
+        with open(image_path, "rb") as f:
+            image_data = base64.b64encode(f.read()).decode("utf-8")
+    except Exception as e:
+        logger.error("Could not read image file: %s", e)
+        return _extract_mock(fallback_text)
+
+    ext = image_path.rsplit(".", 1)[-1].lower()
+    mime_map = {"jpg": "jpeg", "jpeg": "jpeg", "png": "png", "webp": "webp", "tiff": "tiff", "bmp": "bmp"}
+    mime_type = f"image/{mime_map.get(ext, 'png')}"
+
+    client = OpenAI(api_key=api_key)
+    model = settings.openai_model or "gpt-4o-mini"
+
+    try:
+        logger.info("Calling OpenAI Vision (%s) for image invoice extraction...", model)
+
+        response = client.chat.completions.create(
+            model=model,
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": [
+                    {"type": "text", "text": "Extract all invoice data from this image. Return the JSON object only."},
+                    {"type": "image_url", "image_url": {
+                        "url": f"data:{mime_type};base64,{image_data}",
+                        "detail": "high",
+                    }},
+                ]},
+            ],
+            temperature=0.1,
+            max_tokens=4000,
+        )
+
+        content = response.choices[0].message.content
+        if not content:
+            logger.error("OpenAI Vision returned empty content")
+            return _extract_mock(fallback_text)
+
+        logger.info("OpenAI Vision response received (%d chars)", len(content))
+        data = json.loads(content)
+
+        line_items = []
+        for item in data.get("line_items", []):
+            line_items.append(LineItemExtracted(
+                raw_description=str(item.get("raw_description", "Unknown item")),
+                quantity=_safe_decimal(item.get("quantity")),
+                unit=item.get("unit"),
+                unit_price=_safe_decimal(item.get("unit_price")),
+                total_price=_safe_decimal(item.get("total_price")),
+            ))
+
+        result = InvoiceExtracted(
+            supplier_name=data.get("supplier_name"),
+            invoice_date=data.get("invoice_date"),
+            invoice_number=data.get("invoice_number"),
+            currency=data.get("currency", "USD"),
+            total=_safe_decimal(data.get("total")),
+            line_items=line_items,
+        )
+
+        logger.info("Vision extracted: supplier=%s, date=%s, items=%d, total=%s",
+                     result.supplier_name, result.invoice_date, len(result.line_items), result.total)
+        return result
+
+    except Exception as e:
+        logger.error("OpenAI Vision extraction failed: %s", e)
+        return _extract_mock(fallback_text)
 
 
 def _safe_decimal(value) -> Decimal | None:

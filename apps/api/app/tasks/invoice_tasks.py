@@ -83,7 +83,8 @@ def process_invoice_upload(self, invoice_id: str):
         # ── Step 2: Structured extraction via LLM ───────────────────
         settings = get_settings()
         logger.info("Running LLM extraction (provider: %s)", settings.llm_provider)
-        extracted = llm_extract_to_json(raw_text)
+        image_path = invoice.file_path if invoice.file_type in ("png", "jpg", "jpeg", "tiff", "bmp", "webp") else None
+        extracted = llm_extract_to_json(raw_text, image_path=image_path)
 
         # ── Step 3: Update invoice fields ───────────────────────────
         invoice.supplier_name = _safe_str(extracted.supplier_name, 255)
