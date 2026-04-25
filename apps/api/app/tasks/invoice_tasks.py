@@ -81,7 +81,6 @@ def process_invoice_upload(self, invoice_id: str):
         logger.info("Extracted %d chars of text", len(raw_text))
 
         # ── Step 2: Structured extraction via LLM ───────────────────
-        from app.config import get_settings
         settings = get_settings()
         logger.info("Running LLM extraction (provider: %s)", settings.llm_provider)
         extracted = llm_extract_to_json(raw_text)
