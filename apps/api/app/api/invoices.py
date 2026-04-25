@@ -6,6 +6,7 @@ import shutil
 import uuid
 from pathlib import Path
 
+import redis
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session, joinedload
 
@@ -72,6 +73,13 @@ def upload_invoice(
     db.add(invoice)
     db.commit()
     db.refresh(invoice)
+
+    # Store file in Redis so Celery worker can access it
+    try:
+        r = redis.from_url(settings.redis_url)
+        r.setex(f"invoice_file:{invoice.id}", 3600, contents)  # expires in 1 hour
+    except Exception:
+        pass  # local dev with shared volume doesn't need this
 
     # Queue Celery task
     from app.tasks.invoice_tasks import process_invoice_upload

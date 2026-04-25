@@ -3,11 +3,14 @@ Celery task: process an uploaded invoice.
 """
 import logging
 import uuid
+from pathlib import Path
 from datetime import datetime, timedelta
 
+import redis
 from sqlalchemy import func as sql_func
 
 from app.tasks.celery_app import celery_app
+from app.config import get_settings
 from app.database import SessionLocal
 from app.models import Invoice, LineItem, MasterItem, Supplier
 from app.services.extraction import extract_text_from_file
@@ -49,6 +52,25 @@ def process_invoice_upload(self, invoice_id: str):
 
         invoice.status = "processing"
         db.commit()
+
+        # ── Step 0: Ensure file exists (retrieve from Redis if needed) ──
+        file_path = invoice.file_path
+        if file_path and not Path(file_path).exists():
+            logger.info("File not on disk, retrieving from Redis...")
+            try:
+                settings = get_settings()
+                r = redis.from_url(settings.redis_url)
+                file_bytes = r.get(f"invoice_file:{invoice_id}")
+                if file_bytes:
+                    Path(file_path).parent.mkdir(parents=True, exist_ok=True)
+                    with open(file_path, "wb") as f:
+                        f.write(file_bytes)
+                    r.delete(f"invoice_file:{invoice_id}")
+                    logger.info("File restored from Redis (%d bytes)", len(file_bytes))
+                else:
+                    logger.warning("File not found in Redis either")
+            except Exception as e:
+                logger.warning("Could not retrieve file from Redis: %s", e)
 
         # ── Step 1: Extract text ────────────────────────────────────
         logger.info("Extracting text from %s (%s)", invoice.file_path, invoice.file_type)
