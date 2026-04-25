@@ -148,10 +148,10 @@ export default function SupplierDetailPage() {
       </Button>
 
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">{supplier.name}</h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold break-words">{supplier.name}</h1>
             <Badge variant={supplier.is_active ? "default" : "secondary"}>
               {supplier.is_active ? "Activo" : "Inactivo"}
             </Badge>
@@ -246,7 +246,7 @@ export default function SupplierDetailPage() {
 
       {/* Negotiated Prices */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle>Precios Pactados</CardTitle>
           <Dialog open={showAddPrice} onOpenChange={setShowAddPrice}>
             <DialogTrigger asChild>
@@ -285,7 +285,7 @@ export default function SupplierDetailPage() {
                     onChange={(e) => setPriceForm({ ...priceForm, price: e.target.value })}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="text-sm text-muted-foreground">Vigente desde</label>
                     <Input

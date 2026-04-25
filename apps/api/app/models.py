@@ -148,7 +148,7 @@ class Invoice(Base):
     supplier_name: Mapped[str | None] = mapped_column(String(255))
     invoice_date: Mapped[date | None] = mapped_column(Date)
     invoice_number: Mapped[str | None] = mapped_column(String(100))
-    currency: Mapped[str] = mapped_column(String(10), default="USD")
+    currency: Mapped[str] = mapped_column(String(10), default="COP")
     total: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
     file_path: Mapped[str] = mapped_column(String(500), nullable=False)
     file_type: Mapped[str] = mapped_column(String(20))

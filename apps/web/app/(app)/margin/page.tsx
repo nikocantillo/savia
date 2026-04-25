@@ -99,16 +99,16 @@ export default function MarginPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Control de Margen</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Control de Margen</h1>
           <p className="text-muted-foreground">
             Costo de alimentos vs ingresos · Objetivo: {data.food_cost_target_pct}%
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <select
-            className="rounded-md border px-3 py-2 text-sm"
+            className="w-full sm:w-auto rounded-md border px-3 py-2 text-sm"
             value={branchId}
             onChange={(e) => setBranchId(e.target.value)}
           >
@@ -118,7 +118,7 @@ export default function MarginPage() {
             ))}
           </select>
           <select
-            className="rounded-md border px-3 py-2 text-sm"
+            className="w-full sm:w-auto rounded-md border px-3 py-2 text-sm"
             value={days}
             onChange={(e) => setDays(Number(e.target.value))}
           >
@@ -241,7 +241,7 @@ export default function MarginPage() {
               {data.by_branch.map((b) => {
                 const healthy = b.margin_pct >= (100 - data.food_cost_target_pct);
                 return (
-                  <div key={b.branch_id} className="flex items-center justify-between rounded-lg border p-3">
+                  <div key={b.branch_id} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-lg border p-3">
                     <span className="font-medium">{b.branch_name}</span>
                     <Badge variant={healthy ? "default" : "destructive"}>
                       Margen: {b.margin_pct}%

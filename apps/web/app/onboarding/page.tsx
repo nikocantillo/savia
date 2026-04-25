@@ -60,10 +60,10 @@ export default function OnboardingPage() {
         </div>
 
         {/* Progress */}
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2">
           {STEPS.map((s, i) => (
-            <div key={s} className="flex items-center gap-2">
-              <div className={`h-2 w-12 rounded-full ${i <= step ? "bg-primary" : "bg-muted"}`} />
+            <div key={s} className="flex items-center gap-1 sm:gap-2">
+              <div className={`h-2 w-8 sm:w-12 rounded-full ${i <= step ? "bg-primary" : "bg-muted"}`} />
             </div>
           ))}
         </div>

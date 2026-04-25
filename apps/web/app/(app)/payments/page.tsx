@@ -95,7 +95,7 @@ export default function PaymentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Cuentas por Pagar</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Cuentas por Pagar</h1>
         <p className="text-muted-foreground">
           Gestiona los pagos a proveedores y controla tu antigüedad de saldos
         </p>
@@ -177,7 +177,7 @@ export default function PaymentsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 md:gap-3">
               {aging.buckets.map((b) => {
                 const isOverdue = b.bucket !== "current" && parseFloat(b.total) > 0;
                 return (

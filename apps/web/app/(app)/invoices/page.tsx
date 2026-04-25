@@ -129,12 +129,12 @@ export default function InvoicesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Facturas</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Facturas</h1>
           <p className="text-muted-foreground">Carga y gestiona facturas de proveedores</p>
         </div>
-        <div>
+        <div className="w-full sm:w-auto">
           <input
             ref={fileInputRef}
             type="file"
@@ -142,7 +142,7 @@ export default function InvoicesPage() {
             className="hidden"
             onChange={handleUpload}
           />
-          <Button onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+          <Button className="w-full sm:w-auto" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
             <Upload className="mr-2 h-4 w-4" />
             {uploading ? "Subiendo..." : "Subir Factura"}
           </Button>

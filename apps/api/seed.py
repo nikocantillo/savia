@@ -214,7 +214,7 @@ def seed():
             supplier_name=supplier_name,
             invoice_date=inv_date,
             invoice_number=inv_number,
-            currency="USD",
+            currency="COP",
             total=total,
             file_path="/app/uploads/seed/sample.pdf",
             file_type="pdf",

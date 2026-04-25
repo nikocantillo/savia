@@ -206,12 +206,12 @@ export default function InvoiceDetailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/invoices")}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+        <Button variant="ghost" size="icon" className="shrink-0 self-start" onClick={() => router.push("/invoices")}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold break-words">
             {isProcessing(invoice.status) ? (
               <span className="flex items-center gap-3">
                 <Loader2 className="h-6 w-6 animate-spin text-yellow-500" />
@@ -226,7 +226,7 @@ export default function InvoiceDetailPage() {
             {formatDate(invoice.invoice_date)}
           </p>
         </div>
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
           <Badge variant={statusVariant[invoice.status]} className="text-sm">
             {isProcessing(invoice.status) && (
               <Loader2 className="mr-1 h-3 w-3 animate-spin" />
@@ -332,11 +332,11 @@ export default function InvoiceDetailPage() {
       {/* Payment action bar */}
       {invoice.status === "completed" && (
         <Card className={invoice.payment_status === "paid" ? "border-green-200 bg-green-50 dark:bg-green-950/20" : "border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20"}>
-          <CardContent className="flex items-center justify-between py-4">
+          <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between py-4">
             {invoice.payment_status === "paid" ? (
               <>
                 <div className="flex items-center gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-green-800 dark:text-green-200">
                       Factura pagada
@@ -350,14 +350,14 @@ export default function InvoiceDetailPage() {
                     )}
                   </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={handleMarkUnpaid}>
+                <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={handleMarkUnpaid}>
                   Revertir a pendiente
                 </Button>
               </>
             ) : (
               <>
                 <div className="flex items-center gap-3">
-                  <CreditCard className="h-5 w-5 text-yellow-600" />
+                  <CreditCard className="h-5 w-5 text-yellow-600 shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
                       Pago pendiente
@@ -368,7 +368,7 @@ export default function InvoiceDetailPage() {
                     </p>
                   </div>
                 </div>
-                <Button size="sm" onClick={() => setShowPayDialog(true)}>
+                <Button size="sm" className="w-full sm:w-auto" onClick={() => setShowPayDialog(true)}>
                   <CheckCircle2 className="mr-2 h-4 w-4" />
                   Marcar como Pagada
                 </Button>

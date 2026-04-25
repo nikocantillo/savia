@@ -227,13 +227,13 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Panel</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Panel</h1>
           <p className="text-muted-foreground">Resumen de tus compras y proveedores</p>
         </div>
         <Select value={days} onValueChange={setDays}>
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-full sm:w-[140px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -290,10 +290,10 @@ export default function DashboardPage() {
       </div>
 
       <Tabs defaultValue="spend" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="spend">Gasto por Proveedor</TabsTrigger>
-          <TabsTrigger value="increases">Subidas de Precio</TabsTrigger>
-          <TabsTrigger value="history">Historial de Precios</TabsTrigger>
+        <TabsList className="w-full max-w-full overflow-x-auto flex">
+          <TabsTrigger value="spend" className="flex-1 min-w-0 text-xs sm:text-sm">Gasto por Proveedor</TabsTrigger>
+          <TabsTrigger value="increases" className="flex-1 min-w-0 text-xs sm:text-sm">Subidas de Precio</TabsTrigger>
+          <TabsTrigger value="history" className="flex-1 min-w-0 text-xs sm:text-sm">Historial de Precios</TabsTrigger>
         </TabsList>
 
         {/* ── Spend by supplier ──────────────────────────────────── */}
@@ -438,8 +438,8 @@ export default function DashboardPage() {
                       <YAxis
                         type="category"
                         dataKey="name"
-                        width={160}
-                        fontSize={12}
+                        width={100}
+                        fontSize={11}
                         tick={{ fill: "hsl(var(--foreground))" }}
                       />
                       <Tooltip content={<IncreaseTooltip />} />
@@ -504,7 +504,7 @@ export default function DashboardPage() {
                   value={selectedItem || ""}
                   onValueChange={(val) => setSelectedItem(val || null)}
                 >
-                  <SelectTrigger className="w-[250px]">
+                  <SelectTrigger className="w-full sm:w-[250px]">
                     <SelectValue placeholder="Selecciona un producto..." />
                   </SelectTrigger>
                   <SelectContent>

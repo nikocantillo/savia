@@ -103,9 +103,9 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Configuración</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Configuración</h1>
           <p className="text-muted-foreground">Preferencias de notificaciones</p>
         </div>
         {saved && (
@@ -131,14 +131,15 @@ export default function SettingsPage() {
             <Mail className="h-4 w-4" />
             Email activo: <span className="font-medium text-foreground">{activeEmail}</span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Input
               type="email"
+              className="flex-1"
               placeholder={userEmail || "tu-email@empresa.com"}
               value={emailDraft}
               onChange={(e) => setEmailDraft(e.target.value)}
             />
-            <Button onClick={saveEmail} variant="outline">
+            <Button className="w-full sm:w-auto" onClick={saveEmail} variant="outline">
               Guardar
             </Button>
           </div>

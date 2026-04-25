@@ -104,7 +104,7 @@ def process_invoice_upload(self, invoice_id: str):
                     except ValueError:
                         continue
         invoice.invoice_number = _safe_str(extracted.invoice_number, 100)
-        invoice.currency = extracted.currency or "USD"
+        invoice.currency = extracted.currency or "COP"
         invoice.total = extracted.total
 
         # ── Step 3b: Link supplier + compute payment due date ─────

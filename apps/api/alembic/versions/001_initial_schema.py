@@ -45,7 +45,7 @@ def upgrade() -> None:
         sa.Column("supplier_name", sa.String(255)),
         sa.Column("invoice_date", sa.Date()),
         sa.Column("invoice_number", sa.String(100)),
-        sa.Column("currency", sa.String(10), server_default="USD"),
+        sa.Column("currency", sa.String(10), server_default="COP"),
         sa.Column("total", sa.Numeric(12, 2)),
         sa.Column("file_path", sa.String(500), nullable=False),
         sa.Column("file_type", sa.String(20)),

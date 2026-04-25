@@ -28,7 +28,7 @@ RULES:
 - Dates must be in ISO format (YYYY-MM-DD). If the date format is ambiguous, use the most likely interpretation.
 - Prices and amounts should be numbers without currency symbols.
 - If a field is not found or unclear, use null.
-- The currency should be a 3-letter ISO code (USD, EUR, MXN, etc.). Infer from context if not explicit.
+- The currency should be a 3-letter ISO code (COP, USD, EUR, MXN, etc.). Default to COP (Colombian Pesos) unless another currency is explicitly indicated.
 - Be thorough: extract ALL items even if the text is messy or has OCR errors.
 - For the supplier name, use the company/business name at the top of the invoice, NOT the customer name.
 
@@ -37,7 +37,7 @@ Return ONLY a valid JSON object with this exact schema:
   "supplier_name": "string or null",
   "invoice_date": "YYYY-MM-DD or null",
   "invoice_number": "string or null",
-  "currency": "USD",
+  "currency": "COP",
   "total": number or null,
   "line_items": [
     {
@@ -142,7 +142,7 @@ def _extract_with_openai(raw_text: str) -> InvoiceExtracted:
             supplier_name=data.get("supplier_name"),
             invoice_date=data.get("invoice_date"),
             invoice_number=data.get("invoice_number"),
-            currency=data.get("currency", "USD"),
+            currency=data.get("currency", "COP"),
             total=_safe_decimal(data.get("total")),
             line_items=line_items,
         )
@@ -228,7 +228,7 @@ def _extract_with_openai_vision(image_path: str, fallback_text: str = "") -> Inv
             supplier_name=data.get("supplier_name"),
             invoice_date=data.get("invoice_date"),
             invoice_number=data.get("invoice_number"),
-            currency=data.get("currency", "USD"),
+            currency=data.get("currency", "COP"),
             total=_safe_decimal(data.get("total")),
             line_items=line_items,
         )
@@ -273,7 +273,7 @@ def _extract_mock(raw_text: str) -> InvoiceExtracted:
         supplier_name=supplier_name,
         invoice_date=invoice_date,
         invoice_number=invoice_number,
-        currency="USD",
+        currency="COP",
         total=total,
         line_items=line_items,
     )

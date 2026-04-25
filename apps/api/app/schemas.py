@@ -70,7 +70,7 @@ class InvoiceExtracted(BaseModel):
     supplier_name: str | None = None
     invoice_date: str | None = None  # ISO date string
     invoice_number: str | None = None
-    currency: str = "USD"
+    currency: str = "COP"
     total: Decimal | None = None
     line_items: list[LineItemExtracted] = []
 
