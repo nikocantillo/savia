@@ -34,11 +34,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
-      <main className={`flex-1 overflow-y-auto ${isChatPage ? "" : "p-4 pt-14 lg:p-8 lg:pt-8"}`}>
-        <div className="animate-slide-up">
+      {isChatPage ? (
+        <main className="flex-1 flex flex-col overflow-hidden">
           {children}
-        </div>
-      </main>
+        </main>
+      ) : (
+        <main className="flex-1 overflow-y-auto p-4 pt-14 lg:p-8 lg:pt-8">
+          <div className="animate-slide-up">
+            {children}
+          </div>
+        </main>
+      )}
     </div>
   );
 }

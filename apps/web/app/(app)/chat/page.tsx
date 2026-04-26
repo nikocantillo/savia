@@ -173,7 +173,7 @@ export default function ChatPage() {
   const isEmpty = messages.length === 0;
 
   return (
-    <div className="flex flex-col h-full relative">
+    <div className="flex flex-col flex-1 min-h-0 relative">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-3 border-b bg-card/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="flex items-center gap-2">
@@ -199,7 +199,7 @@ export default function ChatPage() {
       </div>
 
       {/* Messages area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
         {isEmpty ? (
           /* ── Empty state / welcome ──────────────────── */
           <div className="flex flex-col items-center justify-center h-full px-4">
