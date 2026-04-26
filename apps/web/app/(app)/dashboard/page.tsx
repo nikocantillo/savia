@@ -247,40 +247,52 @@ export default function DashboardPage() {
 
       {/* KPI cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="relative overflow-hidden border-0 shadow-md">
+          <div className="absolute top-0 right-0 w-20 h-20 rounded-bl-[40px] bg-primary/8" />
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Gasto Total</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+              <DollarSign className="h-4 w-4 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(summary.total_spend)}</div>
             <p className="text-xs text-muted-foreground">Últimos {days} días</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="relative overflow-hidden border-0 shadow-md">
+          <div className="absolute top-0 right-0 w-20 h-20 rounded-bl-[40px] bg-blue-500/8" />
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Facturas</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10">
+              <FileText className="h-4 w-4 text-blue-500" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{summary.total_invoices}</div>
             <p className="text-xs text-muted-foreground">Procesadas</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="relative overflow-hidden border-0 shadow-md">
+          <div className="absolute top-0 right-0 w-20 h-20 rounded-bl-[40px] bg-violet-500/8" />
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Proveedores Activos</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/10">
+              <Users className="h-4 w-4 text-violet-500" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{summary.active_suppliers}</div>
             <p className="text-xs text-muted-foreground">Últimos {days} días</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="relative overflow-hidden border-0 shadow-md">
+          <div className="absolute top-0 right-0 w-20 h-20 rounded-bl-[40px] bg-amber-500/8" />
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Alertas de Precio</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
+              <TrendingUp className="h-4 w-4 text-amber-500" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{summary.top_price_increases.length}</div>

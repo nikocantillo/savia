@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Package, ArrowRight, ArrowLeft, Building2, Target, CheckCircle2 } from "lucide-react";
+import { Brain, ArrowRight, ArrowLeft, Building2, Target, CheckCircle2 } from "lucide-react";
 
 const STEPS = ["Organización", "Sucursales", "Objetivos", "Listo"];
 
@@ -54,9 +54,11 @@ export default function OnboardingPage() {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center p-4">
       <div className="w-full max-w-lg space-y-6">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2">
-          <Package className="h-8 w-8 text-primary" />
-          <span className="text-2xl font-bold">Savia</span>
+        <div className="flex items-center justify-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-brand shadow-md shadow-primary/20">
+            <Brain className="h-5 w-5 text-white" />
+          </div>
+          <span className="text-2xl font-bold gradient-text">Sabia AI</span>
         </div>
 
         {/* Progress */}
@@ -209,7 +211,7 @@ export default function OnboardingPage() {
                   <ArrowLeft className="mr-2 h-4 w-4" />Atrás
                 </Button>
                 <Button className="flex-1" onClick={handleComplete} disabled={saving}>
-                  {saving ? "Guardando..." : "Comenzar a usar Savia"}
+                  {saving ? "Guardando..." : "Comenzar a usar Sabia AI"}
                 </Button>
               </div>
             </CardContent>

@@ -14,7 +14,7 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { Package, Eye, EyeOff } from "lucide-react";
+import { Brain, Eye, EyeOff } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -69,12 +69,12 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md shadow-xl border-0">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-            <Package className="h-6 w-6 text-primary" />
+          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-2xl gradient-brand shadow-lg shadow-primary/25">
+            <Brain className="h-6 w-6 text-white" />
           </div>
-          <CardTitle className="text-2xl">Crear cuenta en Savia</CardTitle>
+          <CardTitle className="text-2xl">Crear cuenta en <span className="gradient-text">Sabia AI</span></CardTitle>
           <CardDescription>
             Registra tu organización para gestionar facturas e inventario
           </CardDescription>
@@ -172,7 +172,7 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full h-11 gradient-brand border-0 text-white font-semibold shadow-lg shadow-primary/25" disabled={loading}>
               {loading ? "Creando cuenta..." : "Crear cuenta"}
             </Button>
           </form>

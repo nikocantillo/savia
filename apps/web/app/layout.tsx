@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Savia",
-  description: "Restaurant invoice intelligence platform",
+  title: "Sabia AI",
+  description: "Plataforma de inteligencia de compras para restaurantes",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="es">
       <body className="min-h-screen antialiased">{children}</body>
     </html>
   );
