@@ -138,7 +138,7 @@ export default function InvoicesPage() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf,.png,.jpg,.jpeg,.tiff,.bmp,.webp"
+            accept=".pdf,.png,.jpg,.jpeg,.tiff,.bmp,.webp,.xml"
             className="hidden"
             onChange={handleUpload}
           />

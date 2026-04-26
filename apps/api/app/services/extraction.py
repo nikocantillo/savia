@@ -28,6 +28,14 @@ def extract_text_from_file(file_path: str, file_type: str) -> str:
     if file_type in ("png", "jpg", "jpeg", "tiff", "bmp", "webp"):
         return _ocr_image(file_path)
 
+    if file_type == "xml":
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                return f.read()
+        except Exception as e:
+            logger.error("XML read failed: %s", e)
+            return ""
+
     raise ValueError(f"Unsupported file type: {file_type}")
 
 

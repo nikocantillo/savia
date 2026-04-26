@@ -19,7 +19,7 @@ from app.schemas import InvoiceOut, InvoiceListOut, LineItemOut
 router = APIRouter(prefix="/invoices", tags=["invoices"])
 settings = get_settings()
 
-ALLOWED_EXTENSIONS = {"pdf", "png", "jpg", "jpeg", "tiff", "bmp", "webp"}
+ALLOWED_EXTENSIONS = {"pdf", "png", "jpg", "jpeg", "tiff", "bmp", "webp", "xml"}
 MAX_UPLOAD_SIZE = 20 * 1024 * 1024  # 20 MB
 
 

@@ -16,6 +16,7 @@ from app.models import Invoice, LineItem, MasterItem, Supplier
 from app.services.extraction import extract_text_from_file
 from app.services.llm_placeholder import llm_extract_to_json
 from app.services.normalization import normalize_text, find_or_create_master_item, reclassify_uncategorized
+from app.services.xml_parser import parse_xml_invoice
 
 logger = logging.getLogger(__name__)
 
@@ -72,19 +73,33 @@ def process_invoice_upload(self, invoice_id: str):
             except Exception as e:
                 logger.warning("Could not retrieve file from Redis: %s", e)
 
-        # ── Step 1: Extract text ────────────────────────────────────
-        logger.info("Extracting text from %s (%s)", invoice.file_path, invoice.file_type)
-        raw_text = extract_text_from_file(invoice.file_path, invoice.file_type)
-        raw_text = _clean_text(raw_text)
-        invoice.raw_text = raw_text[:50000]  # Cap storage at 50k chars
-
-        logger.info("Extracted %d chars of text", len(raw_text))
-
-        # ── Step 2: Structured extraction via LLM ───────────────────
+        # ── Step 1 & 2: Extract structured data ─────────────────────
         settings = get_settings()
-        logger.info("Running LLM extraction (provider: %s)", settings.llm_provider)
-        image_path = invoice.file_path if invoice.file_type in ("png", "jpg", "jpeg", "tiff", "bmp", "webp") else None
-        extracted = llm_extract_to_json(raw_text, image_path=image_path)
+
+        if invoice.file_type == "xml":
+            # XML invoices (DIAN UBL 2.1) → direct parsing, no OCR/LLM needed
+            logger.info("XML invoice detected — parsing directly")
+            extracted = parse_xml_invoice(invoice.file_path)
+            if not extracted:
+                raise ValueError("Could not parse XML invoice file")
+
+            # Store raw XML as reference text
+            try:
+                with open(invoice.file_path, "r", encoding="utf-8") as f:
+                    invoice.raw_text = f.read()[:50000]
+            except Exception:
+                invoice.raw_text = "[XML invoice]"
+        else:
+            # PDF / images → OCR + LLM pipeline
+            logger.info("Extracting text from %s (%s)", invoice.file_path, invoice.file_type)
+            raw_text = extract_text_from_file(invoice.file_path, invoice.file_type)
+            raw_text = _clean_text(raw_text)
+            invoice.raw_text = raw_text[:50000]
+            logger.info("Extracted %d chars of text", len(raw_text))
+
+            logger.info("Running LLM extraction (provider: %s)", settings.llm_provider)
+            image_path = invoice.file_path if invoice.file_type in ("png", "jpg", "jpeg", "tiff", "bmp", "webp") else None
+            extracted = llm_extract_to_json(raw_text, image_path=image_path)
 
         # ── Step 3: Update invoice fields ───────────────────────────
         invoice.supplier_name = _safe_str(extracted.supplier_name, 255)
