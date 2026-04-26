@@ -10,7 +10,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
-import { Upload, FileText, ExternalLink, Loader2, Trash2 } from "lucide-react";
+import { Upload, FileText, ExternalLink, Loader2, Trash2, CloudUpload } from "lucide-react";
+import { TableSkeleton } from "@/components/skeleton-loader";
 
 const statusVariant: Record<string, "default" | "secondary" | "success" | "warning" | "destructive"> = {
   pending: "secondary",
@@ -142,7 +143,7 @@ export default function InvoicesPage() {
             className="hidden"
             onChange={handleUpload}
           />
-          <Button className="w-full sm:w-auto" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+          <Button className="w-full sm:w-auto gradient-brand border-0 text-white shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
             <Upload className="mr-2 h-4 w-4" />
             {uploading ? "Subiendo..." : "Subir Factura"}
           </Button>
@@ -163,22 +164,30 @@ export default function InvoicesPage() {
       )}
 
       {loading ? (
-        <div className="animate-pulse text-muted-foreground">Cargando facturas...</div>
+        <TableSkeleton rows={4} />
       ) : invoices.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <FileText className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <p className="text-lg font-medium">Aún no hay facturas</p>
-            <p className="text-muted-foreground">Sube tu primera factura para comenzar</p>
+        <Card className="border-dashed border-2 border-muted-foreground/20 bg-transparent shadow-none">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 mb-5">
+              <CloudUpload className="h-8 w-8 text-primary" />
+            </div>
+            <p className="text-lg font-semibold mb-1">Aún no hay facturas</p>
+            <p className="text-muted-foreground text-center max-w-sm mb-6">
+              Sube tu primera factura en PDF, imagen o XML y la IA extraerá toda la información automáticamente
+            </p>
+            <Button className="gradient-brand border-0 text-white shadow-md" onClick={() => fileInputRef.current?.click()}>
+              <Upload className="mr-2 h-4 w-4" />
+              Subir primera factura
+            </Button>
           </CardContent>
         </Card>
       ) : (
-        <Card>
+        <Card className="border-0 shadow-md overflow-hidden">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b bg-muted/50">
+                  <tr className="border-b bg-muted/30">
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Proveedor</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">N° Factura</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Fecha</th>

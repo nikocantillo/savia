@@ -8,6 +8,8 @@
     --foreground: 224 71% 4%;
     --card: 0 0% 100%;
     --card-foreground: 224 71% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71% 4%;
     --primary: 160 84% 39%;
     --primary-foreground: 0 0% 100%;
     --secondary: 160 30% 94%;
@@ -25,6 +27,28 @@
     --success: 160 84% 39%;
     --warning: 38 92% 50%;
   }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 210 20% 98%;
+    --card: 224 50% 8%;
+    --card-foreground: 210 20% 98%;
+    --popover: 224 50% 8%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 160 84% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 160 20% 12%;
+    --secondary-foreground: 160 50% 80%;
+    --muted: 224 30% 12%;
+    --muted-foreground: 220 10% 55%;
+    --accent: 262 80% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 224 20% 16%;
+    --input: 224 20% 16%;
+    --ring: 160 84% 45%;
+  }
 }
 
 @layer base {
@@ -33,6 +57,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
@@ -42,6 +67,9 @@
   }
   .gradient-brand-subtle {
     background: linear-gradient(135deg, hsl(160, 84%, 39%, 0.08) 0%, hsl(262, 80%, 55%, 0.08) 100%);
+  }
+  .dark .gradient-brand-subtle {
+    background: linear-gradient(135deg, hsl(160, 84%, 39%, 0.15) 0%, hsl(262, 80%, 55%, 0.15) 100%);
   }
   .gradient-text {
     background: linear-gradient(135deg, hsl(160, 84%, 39%) 0%, hsl(262, 80%, 55%) 100%);
@@ -54,11 +82,14 @@
     -webkit-backdrop-filter: blur(12px) saturate(180%);
     background: rgba(255, 255, 255, 0.75);
   }
+  .dark .glass {
+    background: rgba(10, 10, 20, 0.75);
+  }
   .animate-fade-in {
-    animation: fadeIn 0.5s ease-out;
+    animation: fadeIn 0.4s ease-out;
   }
   .animate-slide-up {
-    animation: slideUp 0.5s ease-out;
+    animation: slideUp 0.4s ease-out;
   }
 }
 
@@ -68,16 +99,6 @@
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 hsl(160, 84%, 39%, 0.4); }
-  50% { box-shadow: 0 0 20px 4px hsl(160, 84%, 39%, 0.15); }
 }

@@ -21,6 +21,7 @@ import {
   Settings,
   Brain,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const navItems = [
   { href: "/dashboard", label: "Panel", icon: LayoutDashboard },
@@ -90,7 +91,11 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t p-3">
+      <div className="border-t p-3 space-y-1">
+        <div className="flex items-center justify-between px-3 py-1">
+          <span className="text-xs text-muted-foreground">Tema</span>
+          <ThemeToggle />
+        </div>
         <button
           onClick={handleLogout}
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-destructive/10 hover:text-destructive"

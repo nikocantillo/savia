@@ -15,6 +15,7 @@ import {
   LineChart, Line, Cell, PieChart, Pie,
 } from "recharts";
 import { DollarSign, FileText, Users, TrendingUp, ArrowUpRight, Loader2, AlertTriangle, RefreshCw } from "lucide-react";
+import { PageSkeleton } from "@/components/skeleton-loader";
 
 // Color palette for charts
 const COLORS = [
@@ -167,12 +168,7 @@ export default function DashboardPage() {
   }, [selectedItem]);
 
   if (loading) {
-    return (
-      <div className="flex items-center gap-3 text-muted-foreground py-12 justify-center">
-        <Loader2 className="h-5 w-5 animate-spin" />
-        Cargando panel...
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   if (error || !summary) {
@@ -227,9 +223,22 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-fade-in">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Panel</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">
+            {(() => {
+              const h = new Date().getHours();
+              if (h < 12) return "Buenos días";
+              if (h < 18) return "Buenas tardes";
+              return "Buenas noches";
+            })()}
+            {(() => {
+              try {
+                const u = JSON.parse(localStorage.getItem("user") || "{}");
+                return u.full_name ? `, ${u.full_name.split(" ")[0]}` : "";
+              } catch { return ""; }
+            })()}
+          </h1>
           <p className="text-muted-foreground">Resumen de tus compras y proveedores</p>
         </div>
         <Select value={days} onValueChange={setDays}>
