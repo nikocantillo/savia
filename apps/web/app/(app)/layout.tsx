@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
+import { ToastProvider } from "@/components/toast";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -32,19 +33,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isChatPage = pathname === "/chat";
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      {isChatPage ? (
-        <main className="flex-1 flex flex-col overflow-hidden">
-          {children}
-        </main>
-      ) : (
-        <main className="flex-1 overflow-y-auto p-4 pt-14 lg:p-8 lg:pt-8">
-          <div className="animate-slide-up">
+    <ToastProvider>
+      <div className="flex h-screen overflow-hidden">
+        <Sidebar />
+        {isChatPage ? (
+          <main className="flex-1 flex flex-col overflow-hidden">
             {children}
-          </div>
-        </main>
-      )}
-    </div>
+          </main>
+        ) : (
+          <main className="flex-1 overflow-y-auto p-4 pt-14 lg:p-8 lg:pt-8">
+            <div className="animate-slide-up">
+              {children}
+            </div>
+          </main>
+        )}
+      </div>
+    </ToastProvider>
   );
 }

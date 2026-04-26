@@ -41,6 +41,16 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+
+  useEffect(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      setUserName(u.full_name || "");
+      setUserEmail(u.email || "");
+    } catch {}
+  }, []);
 
   useEffect(() => {
     setOpen(false);
@@ -91,11 +101,25 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t p-3 space-y-1">
-        <div className="flex items-center justify-between px-3 py-1">
-          <span className="text-xs text-muted-foreground">Tema</span>
-          <ThemeToggle />
-        </div>
+      <div className="border-t p-3 space-y-2">
+        {userName && (
+          <div className="flex items-center gap-3 px-3 py-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full gradient-brand text-white text-xs font-bold shrink-0">
+              {userName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium truncate">{userName}</p>
+              <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
+            </div>
+            <ThemeToggle />
+          </div>
+        )}
+        {!userName && (
+          <div className="flex items-center justify-between px-3 py-1">
+            <span className="text-xs text-muted-foreground">Tema</span>
+            <ThemeToggle />
+          </div>
+        )}
         <button
           onClick={handleLogout}
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-destructive/10 hover:text-destructive"
