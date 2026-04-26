@@ -91,22 +91,35 @@ def update_category(
 
 @router.post("/master-items/reclassify")
 def reclassify_items(
+    force_all: bool = False,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Re-classify all master items that have no category or category='Otros'."""
-    items = (
-        db.query(MasterItem)
-        .filter(
-            MasterItem.organization_id == current_user.organization_id,
+    """
+    Re-classify master items using updated keyword rules + LLM.
+    If force_all=true, re-runs classification on ALL items (useful after fixing
+    the classifier). Otherwise only items in 'Otros' or without category.
+    """
+    from app.services.classifier import classify_with_llm
+
+    query = db.query(MasterItem).filter(
+        MasterItem.organization_id == current_user.organization_id,
+    )
+    if not force_all:
+        query = query.filter(
             (MasterItem.category.is_(None)) | (MasterItem.category == "Otros") | (MasterItem.category == ""),
         )
-        .all()
-    )
+
+    items = query.all()
+    if not items:
+        return {"reclassified": 0, "total_checked": 0}
+
+    descriptions = [item.name for item in items]
+    new_categories = classify_with_llm(descriptions)
+
     updated = 0
-    for item in items:
-        new_cat = classify_item(item.name)
-        if new_cat != "Otros" and new_cat != item.category:
+    for item, new_cat in zip(items, new_categories):
+        if new_cat != item.category:
             item.category = new_cat
             updated += 1
 
