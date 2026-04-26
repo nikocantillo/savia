@@ -175,10 +175,10 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-full relative">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-3 border-b bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+      <div className="flex items-center justify-between px-6 py-3 border-b bg-card/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Sparkles className="h-4 w-4 text-primary" />
+          <div className="h-8 w-8 rounded-lg gradient-brand flex items-center justify-center">
+            <Sparkles className="h-4 w-4 text-white" />
           </div>
           <div>
             <h1 className="text-sm font-semibold">Sabia IA</h1>
@@ -205,8 +205,8 @@ export default function ChatPage() {
           <div className="flex flex-col items-center justify-center h-full px-4">
             <div className="max-w-2xl w-full space-y-8">
               <div className="text-center space-y-3">
-                <div className="mx-auto h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <Sparkles className="h-8 w-8 text-primary" />
+                <div className="mx-auto h-16 w-16 rounded-2xl gradient-brand flex items-center justify-center shadow-lg shadow-primary/20">
+                  <Sparkles className="h-8 w-8 text-white" />
                 </div>
                 <h2 className="text-2xl font-semibold">¿En qué te puedo ayudar?</h2>
                 <p className="text-muted-foreground text-sm max-w-md mx-auto">
@@ -220,7 +220,7 @@ export default function ChatPage() {
                   <button
                     key={i}
                     onClick={() => sendMessage(s.prompt)}
-                    className="text-left p-4 rounded-xl border border-border hover:border-primary/40 hover:bg-accent/50 transition-all group"
+                    className="text-left p-4 rounded-xl border border-border bg-card hover:border-primary/50 hover:shadow-md hover:shadow-primary/5 transition-all duration-200 group"
                   >
                     <p className="text-sm font-medium group-hover:text-primary transition-colors">
                       {s.title}
@@ -305,14 +305,14 @@ export default function ChatPage() {
       )}
 
       {/* Input area */}
-      <div className="border-t bg-background px-4 py-4">
+      <div className="border-t bg-card/80 backdrop-blur-sm px-4 py-4">
         <div className="max-w-3xl mx-auto">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               sendMessage(input);
             }}
-            className="relative flex items-end gap-2 rounded-2xl border bg-muted/30 px-4 py-3 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 transition-all"
+            className="relative flex items-end gap-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all"
           >
             <textarea
               ref={textareaRef}

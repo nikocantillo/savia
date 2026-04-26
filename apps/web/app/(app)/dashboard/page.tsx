@@ -450,7 +450,7 @@ export default function DashboardPage() {
                       layout="vertical"
                       margin={{ left: 20, right: 30, top: 5, bottom: 5 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
                       <XAxis
                         type="number"
                         tickFormatter={(v) => `+${v.toFixed(0)}%`}
@@ -565,8 +565,8 @@ export default function DashboardPage() {
                     }))}
                     margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" fontSize={12} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" fontSize={12} tick={{ fill: "hsl(var(--muted-foreground))" }} />
                     <YAxis
                       tickFormatter={(v) => formatCompact(v)}
                       fontSize={12}

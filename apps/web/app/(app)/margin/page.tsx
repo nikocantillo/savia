@@ -108,7 +108,7 @@ export default function MarginPage() {
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           <select
-            className="w-full sm:w-auto rounded-md border px-3 py-2 text-sm"
+            className="w-full sm:w-auto rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
             value={branchId}
             onChange={(e) => setBranchId(e.target.value)}
           >
@@ -118,7 +118,7 @@ export default function MarginPage() {
             ))}
           </select>
           <select
-            className="w-full sm:w-auto rounded-md border px-3 py-2 text-sm"
+            className="w-full sm:w-auto rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
             value={days}
             onChange={(e) => setDays(Number(e.target.value))}
           >
@@ -203,9 +203,9 @@ export default function MarginPage() {
           <CardContent>
             <ResponsiveContainer width="100%" height={350}>
               <AreaChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" fontSize={12} />
-                <YAxis fontSize={12} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="date" fontSize={12} tick={{ fill: "hsl(var(--muted-foreground))" }} />
+                <YAxis fontSize={12} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} tick={{ fill: "hsl(var(--muted-foreground))" }} />
                 <Tooltip formatter={(v: number) => formatCurrency(v)} />
                 <Legend />
                 <Area type="monotone" dataKey="Ingresos" stroke="#22c55e" fill="#22c55e" fillOpacity={0.1} />
@@ -228,9 +228,9 @@ export default function MarginPage() {
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={branchData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" fontSize={12} />
-                <YAxis fontSize={12} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" fontSize={12} tick={{ fill: "hsl(var(--muted-foreground))" }} />
+                <YAxis fontSize={12} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} tick={{ fill: "hsl(var(--muted-foreground))" }} />
                 <Tooltip formatter={(v: number) => formatCurrency(v)} />
                 <Legend />
                 <Bar dataKey="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]} />

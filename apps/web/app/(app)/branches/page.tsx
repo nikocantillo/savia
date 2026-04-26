@@ -182,7 +182,7 @@ export default function BranchesPage() {
                 <div className="space-y-3">
                   <div>
                     <label className="text-sm text-muted-foreground">Sucursal</label>
-                    <select className="w-full rounded-md border px-3 py-2 text-sm" value={saleForm.branch_id} onChange={(e) => setSaleForm({ ...saleForm, branch_id: e.target.value })}>
+                    <select className="w-full rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30" value={saleForm.branch_id} onChange={(e) => setSaleForm({ ...saleForm, branch_id: e.target.value })}>
                       <option value="">General (sin sucursal)</option>
                       {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
                     </select>

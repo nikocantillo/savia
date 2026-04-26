@@ -178,7 +178,7 @@ export default function SupplierDetailPage() {
               <Input placeholder="Email" value={editForm.contact_email} onChange={(e) => setEditForm({ ...editForm, contact_email: e.target.value })} />
               <Input placeholder="Teléfono" value={editForm.contact_phone} onChange={(e) => setEditForm({ ...editForm, contact_phone: e.target.value })} />
               <Input type="number" placeholder="Plazo de pago" value={editForm.payment_terms_days} onChange={(e) => setEditForm({ ...editForm, payment_terms_days: parseInt(e.target.value) || 30 })} />
-              <textarea className="w-full rounded-md border px-3 py-2 text-sm" placeholder="Notas" rows={2} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
+              <textarea className="w-full rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30" placeholder="Notas" rows={2} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
               <Button className="w-full" onClick={handleUpdate}>Guardar Cambios</Button>
             </div>
           </DialogContent>
@@ -263,7 +263,7 @@ export default function SupplierDetailPage() {
                 <div>
                   <label className="text-sm text-muted-foreground">Producto</label>
                   <select
-                    className="w-full rounded-md border px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
                     value={priceForm.master_item_id}
                     onChange={(e) => setPriceForm({ ...priceForm, master_item_id: e.target.value })}
                   >
