@@ -34,7 +34,7 @@ const navItems = [
   { href: "/branches", label: "Sucursales y Ventas", icon: Store },
   { href: "/prices", label: "Precios", icon: TrendingUp },
   { href: "/reports", label: "Reportes", icon: BarChart3 },
-  { href: "/agents", label: "Inteligencia", icon: Bot },
+  { href: "/agents", label: "Agentes IA", icon: Bot },
   { href: "/chat", label: "Sabia IA", icon: MessageSquare },
   { href: "/alerts", label: "Alertas", icon: Bell },
   { href: "/settings", label: "Configuración", icon: Settings },
