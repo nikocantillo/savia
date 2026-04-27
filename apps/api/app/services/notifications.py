@@ -107,18 +107,22 @@ def notify_alert(alert: Alert, db=None):
 
             html = f"""
             <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
-                <h2 style="color:#1a1a1a;">Savia - {alert_label}</h2>
-                <div style="background:#f9fafb;border-left:4px solid #ef4444;padding:16px;border-radius:8px;">
-                    <p style="margin:0;font-size:15px;color:#374151;">{alert.message}</p>
+                <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:20px 24px;border-radius:12px 12px 0 0;">
+                    <h2 style="color:#ffffff;margin:0;font-size:20px;">Sabia AI — {alert_label}</h2>
                 </div>
-                <p style="margin-top:16px;color:#6b7280;font-size:13px;">
-                    Inicia sesión en Savia para ver más detalles.
-                </p>
+                <div style="background:#ffffff;border:1px solid #e5e7eb;border-top:none;padding:20px 24px;border-radius:0 0 12px 12px;">
+                    <div style="background:#fef2f2;border-left:4px solid #ef4444;padding:16px;border-radius:8px;">
+                        <p style="margin:0;font-size:15px;color:#374151;">{alert.message}</p>
+                    </div>
+                    <p style="margin-top:16px;color:#6b7280;font-size:13px;">
+                        Inicia sesión en Sabia AI para ver más detalles y tomar acción.
+                    </p>
+                </div>
             </div>
             """
             send_email(
                 to_email=to_email,
-                subject=f"[Savia] {alert_label}",
+                subject=f"[Sabia AI] {alert_label}",
                 html_body=html,
                 org_id=str(alert.organization_id),
                 user_id=str(user.id),
@@ -154,18 +158,23 @@ def send_daily_summary(org_id: str):
 
             html = f"""
             <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
-                <h2 style="color:#1a1a1a;">Resumen Diario - {org.name}</h2>
-                <div style="background:#f9fafb;padding:16px;border-radius:8px;">
-                    <p><strong>Alertas sin leer:</strong> {unread_alerts}</p>
+                <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:20px 24px;border-radius:12px 12px 0 0;">
+                    <h2 style="color:#ffffff;margin:0;font-size:20px;">Sabia AI — Resumen Diario</h2>
                 </div>
-                <p style="margin-top:16px;color:#6b7280;font-size:13px;">
-                    Inicia sesión en Savia para ver el detalle completo.
-                </p>
+                <div style="background:#ffffff;border:1px solid #e5e7eb;border-top:none;padding:20px 24px;border-radius:0 0 12px 12px;">
+                    <h3 style="color:#1a1a1a;margin:0 0 12px;">{org.name}</h3>
+                    <div style="background:#f9fafb;padding:16px;border-radius:8px;">
+                        <p style="margin:0;"><strong>Alertas sin leer:</strong> {unread_alerts}</p>
+                    </div>
+                    <p style="margin-top:16px;color:#6b7280;font-size:13px;">
+                        Inicia sesión en Sabia AI para ver el detalle completo.
+                    </p>
+                </div>
             </div>
             """
             send_email(
                 to_email=to_email,
-                subject=f"[Savia] Resumen diario - {org.name}",
+                subject=f"[Sabia AI] Resumen diario - {org.name}",
                 html_body=html,
                 org_id=str(org.id),
                 user_id=str(user.id),
