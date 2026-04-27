@@ -198,6 +198,13 @@ def process_invoice_upload(self, invoice_id: str):
         logger.info("✅ Invoice %s processed successfully (%d line items)",
                      invoice_id, len(extracted.line_items))
 
+        # ── Step 6: Trigger alert computation for this org ──────────
+        try:
+            from app.tasks.alert_tasks import compute_daily_alerts
+            compute_daily_alerts.delay(str(invoice.organization_id))
+        except Exception as e:
+            logger.warning("Alert computation trigger failed (non-fatal): %s", e)
+
     except Exception as exc:
         db.rollback()
         logger.exception("❌ Failed to process invoice %s", invoice_id)

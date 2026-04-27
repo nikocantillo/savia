@@ -140,6 +140,7 @@ export interface DashboardSummary {
   total_invoices: number;
   total_spend: string;
   active_suppliers: number;
+  alert_count: number;
 }
 
 export interface PricePoint {

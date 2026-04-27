@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { api, Alert } from "@/lib/api";
 import { formatCurrency, formatDate, formatPct } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { TableSkeleton } from "@/components/skeleton-loader";
 import {
   Bell,
   BellOff,
@@ -15,6 +16,8 @@ import {
   UserPlus,
   BarChart3,
   TrendingDown,
+  RefreshCw,
+  Loader2,
 } from "lucide-react";
 
 const ALERT_TYPE_CONFIG: Record<
@@ -30,35 +33,35 @@ const ALERT_TYPE_CONFIG: Record<
   price_increase: {
     label: "Aumento de Precio",
     icon: TrendingUp,
-    color: "text-red-600",
+    color: "text-red-600 dark:text-red-400",
     bgColor: "bg-red-500/10",
     borderColor: "border-l-red-500",
   },
   negotiated_price_exceeded: {
     label: "Precio Pactado Excedido",
     icon: ShieldAlert,
-    color: "text-orange-600",
+    color: "text-orange-600 dark:text-orange-400",
     bgColor: "bg-orange-500/10",
     borderColor: "border-l-orange-500",
   },
   new_supplier: {
     label: "Nuevo Proveedor",
     icon: UserPlus,
-    color: "text-blue-600",
+    color: "text-blue-600 dark:text-blue-400",
     bgColor: "bg-blue-500/10",
     borderColor: "border-l-blue-500",
   },
   unusual_volume: {
     label: "Volumen Inusual",
     icon: BarChart3,
-    color: "text-purple-600",
+    color: "text-purple-600 dark:text-purple-400",
     bgColor: "bg-purple-500/10",
     borderColor: "border-l-purple-500",
   },
   low_margin: {
     label: "Margen Bajo",
     icon: TrendingDown,
-    color: "text-rose-600",
+    color: "text-rose-600 dark:text-rose-400",
     bgColor: "bg-rose-500/10",
     borderColor: "border-l-rose-500",
   },
@@ -67,7 +70,7 @@ const ALERT_TYPE_CONFIG: Record<
 const DEFAULT_CONFIG = {
   label: "Alerta",
   icon: Bell,
-  color: "text-gray-600",
+  color: "text-gray-600 dark:text-gray-400",
   bgColor: "bg-gray-500/10",
   borderColor: "border-l-gray-500",
 };
@@ -75,15 +78,37 @@ const DEFAULT_CONFIG = {
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
   const [filter, setFilter] = useState<string>("all");
 
-  useEffect(() => {
-    api
-      .get<Alert[]>("/alerts")
-      .then(setAlerts)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+  const fetchAlerts = useCallback(async () => {
+    try {
+      const data = await api.get<Alert[]>("/alerts");
+      setAlerts(data);
+      return data;
+    } catch (err) {
+      console.error(err);
+      return [];
+    }
   }, []);
+
+  useEffect(() => {
+    fetchAlerts().finally(() => setLoading(false));
+  }, [fetchAlerts]);
+
+  const handleGenerate = async () => {
+    setGenerating(true);
+    try {
+      await api.post("/alerts/generate", {});
+      // Wait a bit for the Celery task to process, then poll
+      await new Promise((r) => setTimeout(r, 3000));
+      await fetchAlerts();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const markAsRead = async (alertId: string) => {
     try {
@@ -107,18 +132,34 @@ export default function AlertsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Alertas</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Alertas</h1>
           <p className="text-muted-foreground">
             Alertas inteligentes de precios, proveedores y volumen
           </p>
         </div>
-        {unreadCount > 0 && (
-          <Badge variant="destructive" className="text-sm">
-            {unreadCount} sin leer
-          </Badge>
-        )}
+        <div className="flex items-center gap-3">
+          {unreadCount > 0 && (
+            <Badge variant="destructive" className="text-sm">
+              {unreadCount} sin leer
+            </Badge>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleGenerate}
+            disabled={generating}
+            className="shrink-0"
+          >
+            {generating ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-2 h-4 w-4" />
+            )}
+            {generating ? "Analizando..." : "Generar alertas"}
+          </Button>
+        </div>
       </div>
 
       {/* Filter Tabs */}
@@ -149,18 +190,30 @@ export default function AlertsPage() {
       </div>
 
       {loading ? (
-        <div className="animate-pulse text-muted-foreground">
-          Cargando alertas...
-        </div>
+        <TableSkeleton rows={4} />
       ) : filteredAlerts.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <BellOff className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <p className="text-lg font-medium">Sin alertas</p>
-            <p className="text-muted-foreground">
+        <Card className="border-0 shadow-md">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted mb-6">
+              <BellOff className="h-8 w-8 text-muted-foreground/50" />
+            </div>
+            <p className="text-lg font-semibold mb-2">Sin alertas</p>
+            <p className="text-muted-foreground text-center max-w-md mb-6">
               Las alertas se generan automáticamente al detectar anomalías en
-              precios, proveedores o volumen
+              precios, proveedores o volumen.
             </p>
+            <Button
+              variant="outline"
+              onClick={handleGenerate}
+              disabled={generating}
+            >
+              {generating ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              {generating ? "Analizando datos..." : "Analizar ahora"}
+            </Button>
           </CardContent>
         </Card>
       ) : (
@@ -175,15 +228,15 @@ export default function AlertsPage() {
                 key={alert.id}
                 className={
                   alert.is_read
-                    ? "opacity-60"
-                    : `border-l-4 ${config.borderColor}`
+                    ? "opacity-60 border-0 shadow-sm"
+                    : `border-l-4 ${config.borderColor} border-0 shadow-md`
                 }
               >
                 <CardContent className="flex items-start gap-4 py-4">
-                  <div className={`mt-1 rounded-full ${config.bgColor} p-2`}>
+                  <div className={`mt-1 rounded-xl ${config.bgColor} p-2.5`}>
                     <Icon className={`h-4 w-4 ${config.color}`} />
                   </div>
-                  <div className="flex-1 space-y-1">
+                  <div className="flex-1 space-y-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-medium">
                         {alert.master_item_name || config.label}
@@ -200,7 +253,7 @@ export default function AlertsPage() {
                     <p className="text-sm text-muted-foreground">
                       {alert.message}
                     </p>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
                       <span>{formatDate(alert.created_at)}</span>
                       {alert.pct_change != null && (
                         <Badge variant="outline" className="text-xs">
@@ -220,6 +273,7 @@ export default function AlertsPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => markAsRead(alert.id)}
+                      className="shrink-0"
                     >
                       <Check className="mr-1 h-3 w-3" />
                       Leída

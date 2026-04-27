@@ -304,8 +304,8 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.top_price_increases.length}</div>
-            <p className="text-xs text-muted-foreground">Productos con alzas</p>
+            <div className="text-2xl font-bold">{summary.alert_count}</div>
+            <p className="text-xs text-muted-foreground">Alertas sin leer</p>
           </CardContent>
         </Card>
       </div>

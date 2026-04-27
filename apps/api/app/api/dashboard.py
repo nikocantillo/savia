@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.api.deps import get_current_user
-from app.models import User, Invoice, LineItem, MasterItem
+from app.models import User, Invoice, LineItem, MasterItem, Alert
 from app.schemas import DashboardSummary, SupplierSpend, PriceIncrease
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -117,10 +117,20 @@ def dashboard_summary(
         .scalar() or 0
     )
 
+    alert_count = (
+        db.query(func.count(Alert.id))
+        .filter(
+            Alert.organization_id == org_id,
+            Alert.is_read == False,
+        )
+        .scalar() or 0
+    )
+
     return DashboardSummary(
         spend_by_supplier=spend_by_supplier,
         top_price_increases=price_increases[:10],
         total_invoices=total_invoices,
         total_spend=total_spend,
         active_suppliers=active_suppliers,
+        alert_count=alert_count,
     )

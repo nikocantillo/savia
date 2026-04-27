@@ -13,6 +13,17 @@ from app.schemas import AlertOut
 router = APIRouter(prefix="/alerts", tags=["alerts"])
 
 
+@router.post("/generate")
+def generate_alerts_now(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Trigger alert computation immediately for the current org."""
+    from app.tasks.alert_tasks import compute_daily_alerts
+    compute_daily_alerts.delay(str(current_user.organization_id))
+    return {"status": "queued", "message": "Generación de alertas en proceso"}
+
+
 @router.get("", response_model=list[AlertOut])
 def list_alerts(
     db: Session = Depends(get_db),

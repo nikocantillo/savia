@@ -176,6 +176,7 @@ class DashboardSummary(BaseModel):
     total_invoices: int
     total_spend: Decimal
     active_suppliers: int
+    alert_count: int = 0
 
 
 # ── Price History ───────────────────────────────────────────────────
