@@ -198,18 +198,19 @@ def process_invoice_upload(self, invoice_id: str):
         logger.info("✅ Invoice %s processed successfully (%d line items)",
                      invoice_id, len(extracted.line_items))
 
-        # ── Step 6: Run alerts + agents immediately (same worker) ────
+        # ── Step 6: Queue alerts + agents (separate tasks for resilience) ─
         org_id_str = str(invoice.organization_id)
         try:
-            from app.tasks.alert_tasks import run_alerts_for_org
-            run_alerts_for_org(org_id_str)
+            from app.tasks.alert_tasks import compute_daily_alerts
+            compute_daily_alerts.delay(org_id_str)
         except Exception as e:
-            logger.warning("Alert computation failed (non-fatal): %s", e)
+            logger.warning("Alert task dispatch failed (non-fatal): %s", e)
 
         try:
-            _run_agents_sync(org_id_str)
+            from app.tasks.agent_tasks import run_org_agents
+            run_org_agents.delay(org_id_str, "after_invoice")
         except Exception as e:
-            logger.warning("Agent run failed (non-fatal): %s", e)
+            logger.warning("Agent task dispatch failed (non-fatal): %s", e)
 
     except Exception as exc:
         db.rollback()
@@ -224,40 +225,5 @@ def process_invoice_upload(self, invoice_id: str):
         except Exception:
             pass
         raise self.retry(exc=exc)
-    finally:
-        db.close()
-
-
-def _run_agents_sync(org_id_str: str):
-    """Run all enabled agents for an org synchronously (no Celery queue hop)."""
-    from app.services.agents import get_agent_class
-    from app.models import AgentConfig
-
-    db = SessionLocal()
-    try:
-        configs = (
-            db.query(AgentConfig)
-            .filter(
-                AgentConfig.organization_id == uuid.UUID(org_id_str),
-                AgentConfig.is_enabled == True,
-            )
-            .all()
-        )
-        for config in configs:
-            if config.schedule not in ("after_invoice", "all"):
-                continue
-            agent_cls = get_agent_class(config.agent_type)
-            if not agent_cls:
-                continue
-            agent = agent_cls(config)
-            run = agent.run(db, config.organization_id, trigger="after_invoice")
-            db.commit()
-            logger.info(
-                "Agent '%s' completed inline: findings=%d, actions=%d",
-                config.name, run.findings_count, run.actions_count,
-            )
-    except Exception as e:
-        db.rollback()
-        logger.warning("Inline agent run failed: %s", e)
     finally:
         db.close()
