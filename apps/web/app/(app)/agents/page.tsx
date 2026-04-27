@@ -21,6 +21,7 @@ import {
   ChevronRight,
   ArrowLeft,
   Zap,
+  Shield,
   Activity,
 } from "lucide-react";
 
@@ -29,6 +30,11 @@ const AGENT_META: Record<string, { icon: typeof TrendingUp; color: string; descr
     icon: TrendingUp,
     color: "text-blue-500",
     description: "Detecta alzas de precios, busca alternativas más baratas y genera recomendaciones automáticas.",
+  },
+  supplier_eval: {
+    icon: Shield,
+    color: "text-purple-500",
+    description: "Califica proveedores por precio, consistencia y cumplimiento de acuerdos.",
   },
 };
 

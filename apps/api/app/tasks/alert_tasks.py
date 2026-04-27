@@ -56,7 +56,7 @@ def compute_daily_alerts(self, org_id: str):
             return
 
         alerts_created = 0
-        alerts_created += _check_price_increases(db, org)
+        # Price increases are now handled by the PriceMonitorAgent
         alerts_created += _check_negotiated_prices(db, org)
         alerts_created += _check_new_suppliers(db, org)
         alerts_created += _check_unusual_volume(db, org)

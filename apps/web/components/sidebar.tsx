@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
 import {
   LayoutDashboard,
   FileText,
@@ -45,6 +46,13 @@ export function Sidebar() {
   const [open, setOpen] = useState(false);
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const [alertCount, setAlertCount] = useState(0);
+
+  const fetchAlertCount = useCallback(() => {
+    api.get<{ id: string; is_read: boolean }[]>("/alerts?unread_only=true")
+      .then((data) => setAlertCount(Array.isArray(data) ? data.length : 0))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     try {
@@ -52,11 +60,15 @@ export function Sidebar() {
       setUserName(u.full_name || "");
       setUserEmail(u.email || "");
     } catch {}
-  }, []);
+    fetchAlertCount();
+    const interval = setInterval(fetchAlertCount, 60000);
+    return () => clearInterval(interval);
+  }, [fetchAlertCount]);
 
   useEffect(() => {
     setOpen(false);
-  }, [pathname]);
+    if (pathname === "/alerts") fetchAlertCount();
+  }, [pathname, fetchAlertCount]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -95,7 +107,12 @@ export function Sidebar() {
             >
               <item.icon className={cn("h-[18px] w-[18px]", active && "text-primary")} />
               {item.label}
-              {active && (
+              {item.href === "/alerts" && alertCount > 0 && (
+                <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold text-destructive-foreground">
+                  {alertCount > 99 ? "99+" : alertCount}
+                </span>
+              )}
+              {item.href !== "/alerts" && active && (
                 <div className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />
               )}
             </Link>
