@@ -64,11 +64,8 @@ export default function AgentsPage() {
 
   const fetchAgents = useCallback(async () => {
     try {
-      let data = await api.get<AgentConfig[]>("/agents");
-      if (data.length === 0) {
-        await api.post("/agents/setup", {});
-        data = await api.get<AgentConfig[]>("/agents");
-      }
+      await api.post("/agents/setup", {});
+      const data = await api.get<AgentConfig[]>("/agents");
       setAgents(data);
     } catch (err) {
       console.error(err);
