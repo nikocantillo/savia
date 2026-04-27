@@ -19,6 +19,7 @@ import {
   AlertTriangle,
   Info,
   ChevronRight,
+  ChevronDown,
   ArrowLeft,
   Zap,
   Shield,
@@ -35,98 +36,174 @@ import {
   Workflow,
   Diamond,
   Sparkles,
+  ToggleLeft,
+  ToggleRight,
+  PauseCircle,
+  Settings,
 } from "lucide-react";
 
-// ── Node type definitions for visual workflow ────────────────────────
+// ── Pipeline node definition ────────────────────────────────────────
 
 type NodeType = "trigger" | "condition" | "action" | "output";
 
-interface WorkflowNode {
+interface PipelineNodeDef {
   id: string;
   type: NodeType;
   label: string;
   icon: typeof Eye;
   description: string;
-  color: string;
+  configurable: boolean;
+  params?: { key: string; label: string; type: "number" | "boolean" | "select"; unit?: string; default: any; options?: { value: string; label: string }[] }[];
 }
 
-const NODE_STYLES: Record<NodeType, { bg: string; border: string; iconBg: string; label: string }> = {
+const NODE_COLORS: Record<NodeType, {
+  bg: string; bgActive: string; border: string; borderActive: string;
+  iconBg: string; iconBgDim: string; text: string; ring: string;
+}> = {
   trigger: {
-    bg: "bg-emerald-500/5 dark:bg-emerald-500/10",
-    border: "border-emerald-500/30 hover:border-emerald-500/60",
-    iconBg: "bg-emerald-500",
-    label: "Trigger",
+    bg: "bg-emerald-500/5", bgActive: "bg-emerald-500/10",
+    border: "border-emerald-500/20", borderActive: "border-emerald-500/50",
+    iconBg: "bg-emerald-500", iconBgDim: "bg-emerald-500/30",
+    text: "text-emerald-600 dark:text-emerald-400", ring: "ring-emerald-500/30",
   },
   condition: {
-    bg: "bg-amber-500/5 dark:bg-amber-500/10",
-    border: "border-amber-500/30 hover:border-amber-500/60",
-    iconBg: "bg-amber-500",
-    label: "Condición",
+    bg: "bg-amber-500/5", bgActive: "bg-amber-500/10",
+    border: "border-amber-500/20", borderActive: "border-amber-500/50",
+    iconBg: "bg-amber-500", iconBgDim: "bg-amber-500/30",
+    text: "text-amber-600 dark:text-amber-400", ring: "ring-amber-500/30",
   },
   action: {
-    bg: "bg-blue-500/5 dark:bg-blue-500/10",
-    border: "border-blue-500/30 hover:border-blue-500/60",
-    iconBg: "bg-blue-500",
-    label: "Acción",
+    bg: "bg-blue-500/5", bgActive: "bg-blue-500/10",
+    border: "border-blue-500/20", borderActive: "border-blue-500/50",
+    iconBg: "bg-blue-500", iconBgDim: "bg-blue-500/30",
+    text: "text-blue-600 dark:text-blue-400", ring: "ring-blue-500/30",
   },
   output: {
-    bg: "bg-purple-500/5 dark:bg-purple-500/10",
-    border: "border-purple-500/30 hover:border-purple-500/60",
-    iconBg: "bg-purple-500",
-    label: "Output",
+    bg: "bg-purple-500/5", bgActive: "bg-purple-500/10",
+    border: "border-purple-500/20", borderActive: "border-purple-500/50",
+    iconBg: "bg-purple-500", iconBgDim: "bg-purple-500/30",
+    text: "text-purple-600 dark:text-purple-400", ring: "ring-purple-500/30",
   },
 };
 
-// ── Agent metadata ─────────────────────────────────────────────────
+const TYPE_LABELS: Record<NodeType, string> = {
+  trigger: "Trigger",
+  condition: "Condición",
+  action: "Acción",
+  output: "Salida",
+};
 
-const AGENT_META: Record<string, {
-  icon: typeof TrendingUp;
-  color: string;
-  gradient: string;
-  description: string;
-  nodes: WorkflowNode[];
-}> = {
+// ── Agent pipelines ────────────────────────────────────────────────
+
+const AGENT_PIPELINES: Record<string, PipelineNodeDef[]> = {
+  price_monitor: [
+    {
+      id: "trigger", type: "trigger", label: "Nueva factura", icon: FileText,
+      description: "El pipeline se activa cada vez que una factura es procesada exitosamente.",
+      configurable: false,
+    },
+    {
+      id: "observe", type: "condition", label: "Cargar historial", icon: Eye,
+      description: "Recopila el historial de precios de todos los productos de la organización para el periodo configurado.",
+      configurable: true,
+      params: [
+        { key: "lookback_days", label: "Días de historial", type: "number", unit: "días", default: 30 },
+      ],
+    },
+    {
+      id: "detect", type: "condition", label: "Detectar alzas", icon: TrendingUp,
+      description: "Compara el precio más reciente de cada producto contra su promedio histórico. Si la diferencia supera el umbral, se marca como alza.",
+      configurable: true,
+      params: [
+        { key: "threshold_pct", label: "Umbral de alza", type: "number", unit: "%", default: 5 },
+      ],
+    },
+    {
+      id: "alternatives", type: "action", label: "Buscar alternativas", icon: Search,
+      description: "Para cada producto con alza detectada, busca el mismo producto en otros proveedores y compara precios.",
+      configurable: true,
+      params: [
+        { key: "find_alternatives", label: "Buscar alternativas", type: "boolean", default: true },
+      ],
+    },
+    {
+      id: "alert", type: "action", label: "Crear alertas", icon: Bell,
+      description: "Genera alertas en el sistema para hallazgos de severidad 'warning' y 'critical'. Las alertas aparecen en la sección de Alertas.",
+      configurable: true,
+      params: [
+        { key: "create_alert", label: "Crear alertas", type: "boolean", default: true },
+      ],
+    },
+    {
+      id: "notify", type: "output", label: "Email", icon: Mail,
+      description: "Envía un correo electrónico con un resumen de hallazgos críticos al administrador de la organización.",
+      configurable: true,
+      params: [
+        { key: "auto_email", label: "Enviar email automático", type: "boolean", default: true },
+      ],
+    },
+  ],
+  supplier_eval: [
+    {
+      id: "trigger", type: "trigger", label: "Nueva factura", icon: FileText,
+      description: "El pipeline se activa cada vez que una factura es procesada exitosamente.",
+      configurable: false,
+    },
+    {
+      id: "observe", type: "condition", label: "Recopilar datos", icon: Eye,
+      description: "Analiza todas las facturas del proveedor en el periodo para calcular métricas de rendimiento.",
+      configurable: true,
+      params: [
+        { key: "lookback_days", label: "Días de historial", type: "number", unit: "días", default: 60 },
+        { key: "min_invoices", label: "Mín. facturas para evaluar", type: "number", unit: "facturas", default: 2 },
+      ],
+    },
+    {
+      id: "score", type: "condition", label: "Calcular score", icon: Activity,
+      description: "Calcula un puntaje (0-100) por proveedor basado en competitividad de precios, consistencia y cumplimiento de acuerdos negociados.",
+      configurable: true,
+      params: [
+        { key: "score_threshold", label: "Umbral mínimo de score", type: "number", unit: "pts", default: 50 },
+      ],
+    },
+    {
+      id: "compliance", type: "action", label: "Verificar acuerdos", icon: Shield,
+      description: "Compara los precios reales cobrados contra los precios negociados registrados. Identifica incumplimientos.",
+      configurable: true,
+      params: [
+        { key: "check_compliance", label: "Verificar cumplimiento", type: "boolean", default: true },
+      ],
+    },
+    {
+      id: "alert", type: "action", label: "Alertar críticos", icon: Bell,
+      description: "Genera alertas para proveedores con score bajo o violaciones de precios negociados.",
+      configurable: true,
+      params: [
+        { key: "create_alert", label: "Crear alertas", type: "boolean", default: true },
+      ],
+    },
+    {
+      id: "report", type: "output", label: "Reporte", icon: FileText,
+      description: "Genera un resumen ejecutivo con rankings de proveedores, identificando los mejores y peores evaluados.",
+      configurable: true,
+      params: [
+        { key: "generate_report", label: "Generar reporte", type: "boolean", default: true },
+      ],
+    },
+  ],
+};
+
+const AGENT_META: Record<string, { icon: typeof TrendingUp; gradient: string; description: string }> = {
   price_monitor: {
     icon: TrendingUp,
-    color: "text-blue-500",
     gradient: "from-blue-500 to-cyan-500",
     description: "Detecta alzas de precios, busca alternativas más baratas y genera recomendaciones.",
-    nodes: [
-      { id: "trigger", type: "trigger", label: "Factura procesada", icon: FileText, description: "Se activa al procesar una nueva factura", color: "emerald" },
-      { id: "observe", type: "condition", label: "Analizar precios", icon: Eye, description: "Compara precio actual vs histórico", color: "amber" },
-      { id: "detect", type: "condition", label: "Detectar alza > umbral", icon: TrendingUp, description: "Identifica incrementos sobre el % configurado", color: "amber" },
-      { id: "alternatives", type: "action", label: "Buscar alternativas", icon: Search, description: "Encuentra proveedores más económicos", color: "blue" },
-      { id: "alert", type: "action", label: "Crear alerta", icon: Bell, description: "Genera alerta en el sistema", color: "blue" },
-      { id: "notify", type: "output", label: "Enviar notificación", icon: Mail, description: "Envía email con hallazgos", color: "purple" },
-    ],
   },
   supplier_eval: {
     icon: Shield,
-    color: "text-purple-500",
     gradient: "from-purple-500 to-pink-500",
     description: "Califica proveedores por precio, consistencia y cumplimiento de acuerdos.",
-    nodes: [
-      { id: "trigger", type: "trigger", label: "Factura procesada", icon: FileText, description: "Se activa al procesar una nueva factura", color: "emerald" },
-      { id: "observe", type: "condition", label: "Recopilar datos", icon: Eye, description: "Analiza historial del proveedor", color: "amber" },
-      { id: "score", type: "condition", label: "Calcular score", icon: Activity, description: "Puntúa competitividad y consistencia", color: "amber" },
-      { id: "compliance", type: "action", label: "Verificar acuerdos", icon: Shield, description: "Compara precios vs. negociados", color: "blue" },
-      { id: "alert", type: "action", label: "Alertar críticos", icon: Bell, description: "Genera alerta si score < umbral", color: "blue" },
-      { id: "report", type: "output", label: "Reporte ejecutivo", icon: FileText, description: "Resumen con recomendaciones", color: "purple" },
-    ],
   },
-};
-
-const PREDEFINED_ACTIONS: Record<string, { id: string; label: string; icon: typeof Bell; description: string }[]> = {
-  price_monitor: [
-    { id: "create_alert", label: "Crear alerta", icon: Bell, description: "Generar alerta en el sistema" },
-    { id: "send_email", label: "Enviar email", icon: Mail, description: "Notificar por correo electrónico" },
-    { id: "find_alternatives", label: "Buscar alternativas", icon: Search, description: "Comparar precios con otros proveedores" },
-  ],
-  supplier_eval: [
-    { id: "create_alert", label: "Crear alerta", icon: Bell, description: "Generar alerta para proveedores críticos" },
-    { id: "send_email", label: "Enviar email", icon: Mail, description: "Notificar evaluaciones críticas" },
-    { id: "generate_report", label: "Generar reporte", icon: FileText, description: "Resumen ejecutivo con rankings" },
-  ],
 };
 
 const SEVERITY_CONFIG: Record<string, { icon: typeof AlertTriangle; color: string; bg: string; label: string }> = {
@@ -150,14 +227,11 @@ const RULE_CONDITIONS = [
   { id: "volume_spike", label: "Volumen aumenta más de", unit: "%" },
 ];
 
-const RULE_ACTIONS = [
+const RULE_ACTIONS_LIST = [
   { id: "create_alert", label: "Crear alerta", icon: Bell, color: "amber" },
   { id: "send_email", label: "Enviar email", icon: Mail, color: "blue" },
   { id: "send_email_urgent", label: "Email urgente", icon: Zap, color: "red" },
-  { id: "block_supplier", label: "Marcar proveedor", icon: Shield, color: "purple" },
 ];
-
-// ── Types ──────────────────────────────────────────────────────────
 
 interface CustomRule {
   id: string;
@@ -166,70 +240,177 @@ interface CustomRule {
   action: string;
 }
 
-// ── SVG Connector Line ─────────────────────────────────────────────
+// ── Interactive Pipeline Node ────────────────────────────────────────
 
-function ConnectorLine({ animated = false }: { animated?: boolean }) {
+function PipelineNode({
+  node, isSelected, isEnabled, isExecuting, stepIndex, totalSteps,
+  nodeConfig, onClick, onToggle, onParamChange,
+}: {
+  node: PipelineNodeDef;
+  isSelected: boolean;
+  isEnabled: boolean;
+  isExecuting: boolean;
+  stepIndex: number;
+  totalSteps: number;
+  nodeConfig: Record<string, any>;
+  onClick: () => void;
+  onToggle: () => void;
+  onParamChange: (key: string, value: any) => void;
+}) {
+  const c = NODE_COLORS[node.type];
+  const NodeIcon = node.icon;
+
   return (
-    <div className="flex items-center w-8 shrink-0 relative">
-      <svg width="32" height="24" className="overflow-visible">
-        <defs>
-          <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="currentColor" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="currentColor" stopOpacity="0.6" />
-          </linearGradient>
-        </defs>
-        <line x1="0" y1="12" x2="32" y2="12" stroke="url(#lineGrad)" strokeWidth="2" strokeDasharray={animated ? "4 4" : "none"}>
-          {animated && (
-            <animate attributeName="stroke-dashoffset" from="8" to="0" dur="0.6s" repeatCount="indefinite" />
+    <div className="flex flex-col items-center shrink-0">
+      {/* The node */}
+      <div
+        onClick={(e) => { e.stopPropagation(); onClick(); }}
+        className={`
+          relative flex flex-col items-center gap-1.5 p-3 rounded-2xl border-2 transition-all duration-300 w-[120px] cursor-pointer select-none
+          ${isEnabled ? c.bgActive : "bg-muted/30"}
+          ${isSelected ? `${c.borderActive} shadow-lg ring-2 ring-offset-2 ring-offset-background ${c.ring}` : `${c.border} hover:shadow-md`}
+          ${!isEnabled && "opacity-50"}
+          ${isExecuting ? "animate-pulse" : ""}
+        `}
+      >
+        {/* Step number */}
+        <div className={`absolute -top-2.5 -left-2.5 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold shadow-sm ${
+          isEnabled ? `${c.iconBg} text-white` : "bg-muted text-muted-foreground"
+        }`}>
+          {stepIndex + 1}
+        </div>
+
+        {/* Enable/disable indicator */}
+        {node.configurable && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggle(); }}
+            className="absolute -top-2 -right-2 z-10"
+            title={isEnabled ? "Desactivar paso" : "Activar paso"}
+          >
+            {isEnabled ? (
+              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500 shadow-md">
+                <CheckCircle2 className="h-3 w-3 text-white" />
+              </div>
+            ) : (
+              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-muted-foreground/40 shadow-md">
+                <PauseCircle className="h-3 w-3 text-white" />
+              </div>
+            )}
+          </button>
+        )}
+
+        {/* Icon */}
+        <div className={`flex h-10 w-10 items-center justify-center rounded-xl shadow-md transition-all ${
+          isEnabled ? c.iconBg : c.iconBgDim
+        }`}>
+          <NodeIcon className="h-5 w-5 text-white" />
+        </div>
+
+        {/* Label */}
+        <p className="text-[11px] font-semibold text-center leading-tight mt-0.5">{node.label}</p>
+
+        {/* Type tag */}
+        <span className={`text-[9px] font-bold uppercase tracking-wider ${c.text} opacity-70`}>{TYPE_LABELS[node.type]}</span>
+
+        {/* Config indicator */}
+        {node.configurable && isSelected && (
+          <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 rotate-45 border-b-2 border-r-2 bg-card ${c.borderActive}`} />
+        )}
+      </div>
+
+      {/* Inline config panel (expands below the node) */}
+      {isSelected && node.configurable && (
+        <div className={`mt-3 w-72 rounded-2xl border-2 ${c.borderActive} bg-card shadow-xl p-4 animate-in fade-in slide-in-from-top-2 duration-200 z-10`}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Settings className={`h-3.5 w-3.5 ${c.text}`} />
+              <span className="text-xs font-bold">Configuración</span>
+            </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); onToggle(); }}
+              className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold transition-all ${
+                isEnabled ? "bg-green-500/15 text-green-600 dark:text-green-400" : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {isEnabled ? <ToggleRight className="h-3 w-3" /> : <ToggleLeft className="h-3 w-3" />}
+              {isEnabled ? "Activo" : "Inactivo"}
+            </button>
+          </div>
+
+          {/* Description */}
+          <p className="text-[11px] text-muted-foreground leading-relaxed mb-3 border-b border-border/40 pb-3">
+            {node.description}
+          </p>
+
+          {/* Parameters */}
+          {node.params && node.params.length > 0 && (
+            <div className="space-y-3">
+              {node.params.map((param) => {
+                const value = nodeConfig[param.key] ?? param.default;
+
+                if (param.type === "boolean") {
+                  return (
+                    <div key={param.key} className="flex items-center justify-between">
+                      <span className="text-xs font-medium">{param.label}</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onParamChange(param.key, !value); }}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                          value ? "bg-primary" : "bg-muted-foreground/20"
+                        }`}
+                      >
+                        <span className="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform"
+                          style={{ transform: `translateX(${value ? "16px" : "3px"})` }}
+                        />
+                      </button>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div key={param.key}>
+                    <label className="text-xs font-medium block mb-1">{param.label}</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={value}
+                        onChange={(e) => onParamChange(param.key, Number(e.target.value))}
+                        onClick={(e) => e.stopPropagation()}
+                        className={`flex-1 rounded-xl border ${c.border} bg-transparent px-3 py-1.5 text-sm font-mono font-bold outline-none focus:ring-2 ${c.ring} text-center`}
+                      />
+                      {param.unit && (
+                        <span className="text-[11px] text-muted-foreground font-medium shrink-0">{param.unit}</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Connector ────────────────────────────────────────────────────────
+
+function Connector({ active, disabled }: { active: boolean; disabled: boolean }) {
+  return (
+    <div className={`flex items-center w-10 shrink-0 self-start mt-[38px] ${disabled ? "opacity-30" : ""}`}>
+      <svg width="40" height="16" className="overflow-visible">
+        <line x1="0" y1="8" x2="36" y2="8" stroke="currentColor" strokeWidth="2"
+          strokeDasharray={active ? "4 3" : disabled ? "2 4" : "none"}
+          className={disabled ? "text-muted-foreground/30" : "text-muted-foreground/50"}
+        >
+          {active && <animate attributeName="stroke-dashoffset" from="7" to="0" dur="0.5s" repeatCount="indefinite" />}
         </line>
-        <polygon points="28,8 32,12 28,16" fill="currentColor" opacity="0.5" />
+        <polygon points="34,4 40,8 34,12" fill="currentColor" className={disabled ? "text-muted-foreground/20" : "text-muted-foreground/40"} />
       </svg>
     </div>
   );
 }
 
-// ── Workflow Node Component ─────────────────────────────────────────
-
-function WorkflowNodeCard({ node, isActive }: { node: WorkflowNode; isActive?: boolean }) {
-  const style = NODE_STYLES[node.type];
-  const NodeIcon = node.icon;
-
-  return (
-    <div className="group relative">
-      <div className={`
-        relative flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all duration-300 cursor-default w-[110px]
-        ${style.bg} ${style.border}
-        ${isActive ? "shadow-lg scale-105 ring-2 ring-offset-2 ring-offset-background ring-primary/30" : "shadow-sm hover:shadow-md hover:scale-[1.02]"}
-      `}>
-        {/* Port indicator (top) */}
-        <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 h-3 w-3 rounded-full border-2 border-background bg-muted-foreground/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-
-        {/* Icon */}
-        <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${style.iconBg} shadow-md`}>
-          <NodeIcon className="h-4 w-4 text-white" />
-        </div>
-
-        {/* Label */}
-        <p className="text-[11px] font-semibold text-center leading-tight line-clamp-2">{node.label}</p>
-
-        {/* Type badge */}
-        <span className={`text-[9px] uppercase font-bold tracking-wider opacity-60`}>{style.label}</span>
-
-        {/* Port indicator (bottom) */}
-        <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-3 w-3 rounded-full border-2 border-background bg-muted-foreground/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-      </div>
-
-      {/* Hover tooltip */}
-      <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0 bg-popover border rounded-xl px-3 py-2 text-xs shadow-xl whitespace-nowrap z-50 pointer-events-none">
-        <div className="font-medium">{node.label}</div>
-        <div className="text-muted-foreground">{node.description}</div>
-      </div>
-    </div>
-  );
-}
-
-// ── Rule Builder Block (visual) ─────────────────────────────────────
+// ── Rule block ──────────────────────────────────────────────────────
 
 function RuleBlock({ rule, onUpdate, onDelete }: {
   rule: CustomRule;
@@ -237,89 +418,51 @@ function RuleBlock({ rule, onUpdate, onDelete }: {
   onDelete: () => void;
 }) {
   const condObj = RULE_CONDITIONS.find((c) => c.id === rule.condition);
-  const actObj = RULE_ACTIONS.find((a) => a.id === rule.action);
+  const actObj = RULE_ACTIONS_LIST.find((a) => a.id === rule.action);
   const ActIcon = actObj?.icon || Bell;
 
   return (
-    <div className="group relative">
-      {/* Rule card with visual blocks */}
-      <div className="flex items-stretch gap-0 rounded-2xl border border-border/60 bg-card overflow-hidden shadow-sm hover:shadow-md transition-all">
-        {/* Condition block */}
-        <div className="flex-1 p-3 bg-amber-500/5 dark:bg-amber-500/10 border-r border-border/40">
-          <div className="flex items-center gap-1.5 mb-2">
-            <Diamond className="h-3 w-3 text-amber-500" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Si</span>
-          </div>
-          <select
-            value={rule.condition}
-            onChange={(e) => onUpdate("condition", e.target.value)}
-            className="w-full rounded-lg border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 text-foreground px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-amber-500/30 mb-2"
-          >
-            {RULE_CONDITIONS.map((c) => (
-              <option key={c.id} value={c.id}>{c.label}</option>
-            ))}
-          </select>
-          {rule.condition !== "new_supplier" && (
-            <div className="flex items-center gap-1.5">
-              <input
-                type="number"
-                value={rule.threshold}
-                onChange={(e) => onUpdate("threshold", Number(e.target.value))}
-                className="w-16 rounded-lg border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 text-foreground px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-amber-500/30 text-center font-mono font-bold"
-              />
-              <span className="text-[10px] text-muted-foreground font-medium">{condObj?.unit}</span>
-            </div>
-          )}
+    <div className="group flex items-stretch rounded-2xl border border-border/60 bg-card overflow-hidden shadow-sm hover:shadow-md transition-all">
+      <div className="flex-1 p-3 bg-amber-500/5 dark:bg-amber-500/10 border-r border-border/40">
+        <div className="flex items-center gap-1.5 mb-2">
+          <Diamond className="h-3 w-3 text-amber-500" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Si</span>
         </div>
-
-        {/* Arrow connector */}
-        <div className="flex items-center px-2 bg-muted/30">
-          <div className="flex flex-col items-center gap-0.5">
-            <div className="h-px w-4 bg-border" />
-            <ArrowRight className="h-3 w-3 text-muted-foreground" />
-            <div className="h-px w-4 bg-border" />
-          </div>
-        </div>
-
-        {/* Action block */}
-        <div className="flex-1 p-3 bg-blue-500/5 dark:bg-blue-500/10">
-          <div className="flex items-center gap-1.5 mb-2">
-            <Zap className="h-3 w-3 text-blue-500" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Entonces</span>
-          </div>
-          <select
-            value={rule.action}
-            onChange={(e) => onUpdate("action", e.target.value)}
-            className="w-full rounded-lg border border-blue-500/20 bg-blue-500/5 dark:bg-blue-500/10 text-foreground px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500/30"
-          >
-            {RULE_ACTIONS.map((a) => (
-              <option key={a.id} value={a.id}>{a.label}</option>
-            ))}
-          </select>
-          <div className="flex items-center gap-1.5 mt-2">
-            <div className={`h-5 w-5 rounded-md flex items-center justify-center ${
-              actObj?.color === "red" ? "bg-red-500/20" :
-              actObj?.color === "purple" ? "bg-purple-500/20" :
-              actObj?.color === "amber" ? "bg-amber-500/20" : "bg-blue-500/20"
-            }`}>
-              <ActIcon className={`h-3 w-3 ${
-                actObj?.color === "red" ? "text-red-500" :
-                actObj?.color === "purple" ? "text-purple-500" :
-                actObj?.color === "amber" ? "text-amber-500" : "text-blue-500"
-              }`} />
-            </div>
-            <span className="text-[10px] text-muted-foreground">{actObj?.label}</span>
-          </div>
-        </div>
-
-        {/* Delete button */}
-        <button
-          onClick={onDelete}
-          className="px-3 flex items-center justify-center hover:bg-destructive/10 transition-colors border-l border-border/40"
+        <select value={rule.condition} onChange={(e) => onUpdate("condition", e.target.value)}
+          className="w-full rounded-lg border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 text-foreground px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-amber-500/30 mb-2"
         >
-          <Trash2 className="h-3.5 w-3.5 text-muted-foreground group-hover:text-destructive transition-colors" />
-        </button>
+          {RULE_CONDITIONS.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+        </select>
+        {rule.condition !== "new_supplier" && (
+          <div className="flex items-center gap-1.5">
+            <input type="number" value={rule.threshold} onChange={(e) => onUpdate("threshold", Number(e.target.value))}
+              className="w-16 rounded-lg border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 text-foreground px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-amber-500/30 text-center font-mono font-bold"
+            />
+            <span className="text-[10px] text-muted-foreground font-medium">{condObj?.unit}</span>
+          </div>
+        )}
       </div>
+      <div className="flex items-center px-2 bg-muted/30">
+        <ArrowRight className="h-3 w-3 text-muted-foreground" />
+      </div>
+      <div className="flex-1 p-3 bg-blue-500/5 dark:bg-blue-500/10">
+        <div className="flex items-center gap-1.5 mb-2">
+          <Zap className="h-3 w-3 text-blue-500" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Entonces</span>
+        </div>
+        <select value={rule.action} onChange={(e) => onUpdate("action", e.target.value)}
+          className="w-full rounded-lg border border-blue-500/20 bg-blue-500/5 dark:bg-blue-500/10 text-foreground px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500/30"
+        >
+          {RULE_ACTIONS_LIST.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}
+        </select>
+        <div className="flex items-center gap-1.5 mt-2 opacity-70">
+          <ActIcon className="h-3 w-3" />
+          <span className="text-[10px]">{actObj?.label}</span>
+        </div>
+      </div>
+      <button onClick={onDelete} className="px-3 flex items-center hover:bg-destructive/10 transition-colors border-l border-border/40">
+        <Trash2 className="h-3.5 w-3.5 text-muted-foreground group-hover:text-destructive transition-colors" />
+      </button>
     </div>
   );
 }
@@ -335,6 +478,8 @@ export default function AgentsPage() {
   const [runs, setRuns] = useState<Record<string, AgentRun[]>>({});
   const [loadingRuns, setLoadingRuns] = useState<string | null>(null);
   const [view, setView] = useState<"list" | "detail" | "run">("list");
+  const [activeNode, setActiveNode] = useState<string | null>(null);
+  const [executingStep, setExecutingStep] = useState(-1);
   const { toast } = useToast();
 
   const fetchAgents = useCallback(async () => {
@@ -342,23 +487,46 @@ export default function AgentsPage() {
       await api.post("/agents/setup", {});
       const data = await api.get<AgentConfig[]>("/agents");
       setAgents(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchAgents(); }, [fetchAgents]);
 
+  const updateAgentConfig = async (agent: AgentConfig, newConfig: any) => {
+    try {
+      await api.put(`/agents/${agent.id}`, { config: newConfig });
+      const updated = { ...agent, config: newConfig };
+      setAgents((prev) => prev.map((a) => (a.id === agent.id ? updated : a)));
+      if (selectedAgent?.id === agent.id) setSelectedAgent(updated);
+    } catch (err: any) {
+      toast("error", "Error al guardar configuración");
+    }
+  };
+
   const handleTrigger = async (agentId: string) => {
     setTriggering(agentId);
+    setExecutingStep(0);
+
+    const pipeline = AGENT_PIPELINES[selectedAgent?.agent_type || ""] || [];
+    const interval = setInterval(() => {
+      setExecutingStep((prev) => {
+        if (prev >= pipeline.length - 1) { clearInterval(interval); return prev; }
+        return prev + 1;
+      });
+    }, 800);
+
     try {
       await api.post(`/agents/${agentId}/trigger`, {});
-      toast("success", "Agente ejecutado exitosamente");
+      clearInterval(interval);
+      setExecutingStep(pipeline.length);
+      toast("success", "Pipeline ejecutado exitosamente");
       await fetchAgents();
       await loadRuns_(agentId);
+      setTimeout(() => setExecutingStep(-1), 2000);
     } catch (err: any) {
+      clearInterval(interval);
+      setExecutingStep(-1);
       toast("error", err.message || "Error al ejecutar agente");
     } finally {
       setTriggering(null);
@@ -368,64 +536,45 @@ export default function AgentsPage() {
   const handleToggle = async (agent: AgentConfig) => {
     try {
       await api.put<AgentConfig>(`/agents/${agent.id}`, { is_enabled: !agent.is_enabled });
-      setAgents((prev) => prev.map((a) => (a.id === agent.id ? { ...a, is_enabled: !a.is_enabled } : a)));
-      if (selectedAgent?.id === agent.id) setSelectedAgent({ ...agent, is_enabled: !agent.is_enabled });
+      const updated = { ...agent, is_enabled: !agent.is_enabled };
+      setAgents((prev) => prev.map((a) => (a.id === agent.id ? updated : a)));
+      if (selectedAgent?.id === agent.id) setSelectedAgent(updated);
       toast("success", agent.is_enabled ? "Agente desactivado" : "Agente activado");
     } catch (err: any) {
       toast("error", err.message || "Error al actualizar");
     }
   };
 
-  const handleActionToggle = async (agent: AgentConfig, actionId: string) => {
-    const currentActions = agent.config?.actions || {};
-    const newActions = { ...currentActions, [actionId]: !currentActions[actionId] };
-    const newConfig = { ...agent.config, actions: newActions };
-    try {
-      await api.put(`/agents/${agent.id}`, { config: newConfig });
-      setAgents((prev) => prev.map((a) => (a.id === agent.id ? { ...a, config: newConfig } : a)));
-      if (selectedAgent?.id === agent.id) setSelectedAgent({ ...agent, config: newConfig });
-    } catch (err: any) {
-      toast("error", "Error al actualizar acción");
-    }
+  const handleNodeToggle = (agent: AgentConfig, nodeId: string) => {
+    const pipeline = agent.config?.pipeline || {};
+    const current = pipeline[nodeId] || {};
+    const newPipeline = { ...pipeline, [nodeId]: { ...current, enabled: !(current.enabled ?? true) } };
+    updateAgentConfig(agent, { ...agent.config, pipeline: newPipeline });
   };
 
-  const handleAddRule = async (agent: AgentConfig) => {
-    const currentRules: CustomRule[] = agent.config?.rules || [];
-    const newRule: CustomRule = {
-      id: `rule_${Date.now()}`,
-      condition: "price_increase",
-      threshold: 10,
-      action: "create_alert",
-    };
-    const newConfig = { ...agent.config, rules: [...currentRules, newRule] };
-    try {
-      await api.put(`/agents/${agent.id}`, { config: newConfig });
-      setAgents((prev) => prev.map((a) => (a.id === agent.id ? { ...a, config: newConfig } : a)));
-      if (selectedAgent?.id === agent.id) setSelectedAgent({ ...agent, config: newConfig });
-    } catch (err: any) {
-      toast("error", "Error al agregar regla");
-    }
+  const handleNodeParam = (agent: AgentConfig, nodeId: string, key: string, value: any) => {
+    const pipeline = agent.config?.pipeline || {};
+    const current = pipeline[nodeId] || {};
+    const params = current.params || {};
+    const newPipeline = { ...pipeline, [nodeId]: { ...current, params: { ...params, [key]: value } } };
+    updateAgentConfig(agent, { ...agent.config, pipeline: newPipeline });
   };
 
-  const handleUpdateRule = async (agent: AgentConfig, ruleId: string, field: string, value: any) => {
+  const handleAddRule = (agent: AgentConfig) => {
     const currentRules: CustomRule[] = agent.config?.rules || [];
-    const updated = currentRules.map((r) => (r.id === ruleId ? { ...r, [field]: value } : r));
-    const newConfig = { ...agent.config, rules: updated };
-    try {
-      await api.put(`/agents/${agent.id}`, { config: newConfig });
-      setAgents((prev) => prev.map((a) => (a.id === agent.id ? { ...a, config: newConfig } : a)));
-      if (selectedAgent?.id === agent.id) setSelectedAgent({ ...agent, config: newConfig });
-    } catch {}
+    const newRule: CustomRule = { id: `rule_${Date.now()}`, condition: "price_increase", threshold: 10, action: "create_alert" };
+    updateAgentConfig(agent, { ...agent.config, rules: [...currentRules, newRule] });
   };
 
-  const handleDeleteRule = async (agent: AgentConfig, ruleId: string) => {
-    const currentRules: CustomRule[] = agent.config?.rules || [];
-    const newConfig = { ...agent.config, rules: currentRules.filter((r) => r.id !== ruleId) };
-    try {
-      await api.put(`/agents/${agent.id}`, { config: newConfig });
-      setAgents((prev) => prev.map((a) => (a.id === agent.id ? { ...a, config: newConfig } : a)));
-      if (selectedAgent?.id === agent.id) setSelectedAgent({ ...agent, config: newConfig });
-    } catch {}
+  const handleUpdateRule = (agent: AgentConfig, ruleId: string, field: string, value: any) => {
+    const rules: CustomRule[] = agent.config?.rules || [];
+    const updated = rules.map((r) => (r.id === ruleId ? { ...r, [field]: value } : r));
+    updateAgentConfig(agent, { ...agent.config, rules: updated });
+  };
+
+  const handleDeleteRule = (agent: AgentConfig, ruleId: string) => {
+    const rules: CustomRule[] = agent.config?.rules || [];
+    updateAgentConfig(agent, { ...agent.config, rules: rules.filter((r) => r.id !== ruleId) });
   };
 
   const loadRuns_ = async (agentId: string) => {
@@ -445,17 +594,19 @@ export default function AgentsPage() {
     } catch (err) { console.error(err); }
   };
 
-  const openAgentDetail = (agent: AgentConfig) => {
+  const openDetail = (agent: AgentConfig) => {
     setSelectedAgent(agent);
     setView("detail");
+    setActiveNode(null);
+    setExecutingStep(-1);
     if (!runs[agent.id]) loadRuns_(agent.id);
   };
 
   // ── Run Detail View ──────────────────────────────────────────────
 
   if (view === "run" && selectedRun && selectedAgent) {
-    const statusCfg = STATUS_CONFIG[selectedRun.status] || STATUS_CONFIG.completed;
-    const StatusIcon = statusCfg.icon;
+    const sc = STATUS_CONFIG[selectedRun.status] || STATUS_CONFIG.completed;
+    const SIcon = sc.icon;
 
     return (
       <div className="space-y-6">
@@ -464,8 +615,8 @@ export default function AgentsPage() {
             <ArrowLeft className="h-4 w-4 mr-1" /> Volver
           </Button>
           <div className="flex items-center gap-2">
-            <StatusIcon className={`h-4 w-4 ${statusCfg.color} ${selectedRun.status === "running" ? "animate-spin" : ""}`} />
-            <span className="font-medium">{statusCfg.label}</span>
+            <SIcon className={`h-4 w-4 ${sc.color} ${selectedRun.status === "running" ? "animate-spin" : ""}`} />
+            <span className="font-medium">{sc.label}</span>
           </div>
           <span className="text-sm text-muted-foreground">{formatDate(selectedRun.started_at)}</span>
         </div>
@@ -500,32 +651,27 @@ export default function AgentsPage() {
 
         <div className="space-y-3">
           {selectedRun.findings.map((f) => {
-            const sevCfg = SEVERITY_CONFIG[f.severity] || SEVERITY_CONFIG.info;
-            const SevIcon = sevCfg.icon;
-            const alternatives = f.data?.alternatives as Array<{ name: string; avg_price: number }> | undefined;
+            const sv = SEVERITY_CONFIG[f.severity] || SEVERITY_CONFIG.info;
+            const SI = sv.icon;
+            const alts = f.data?.alternatives as Array<{ name: string; avg_price: number }> | undefined;
             return (
               <div key={f.id} className={`rounded-2xl border p-4 ${
                 f.severity === "critical" ? "border-red-500/30 bg-red-500/5" :
-                f.severity === "warning" ? "border-amber-500/30 bg-amber-500/5" :
-                "border-blue-500/30 bg-blue-500/5"
+                f.severity === "warning" ? "border-amber-500/30 bg-amber-500/5" : "border-blue-500/30 bg-blue-500/5"
               }`}>
                 <div className="flex items-start gap-3">
-                  <div className={`mt-0.5 rounded-xl ${sevCfg.bg} p-2.5`}>
-                    <SevIcon className={`h-4 w-4 ${sevCfg.color}`} />
-                  </div>
+                  <div className={`mt-0.5 rounded-xl ${sv.bg} p-2.5`}><SI className={`h-4 w-4 ${sv.color}`} /></div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <p className="font-semibold text-sm">{f.title}</p>
-                      <Badge variant="outline" className="text-[10px]">{sevCfg.label}</Badge>
+                      <Badge variant="outline" className="text-[10px]">{sv.label}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground whitespace-pre-line">{f.description}</p>
-                    {alternatives && alternatives.length > 0 && (
+                    {alts && alts.length > 0 && (
                       <div className="mt-3 rounded-xl bg-green-500/5 border border-green-500/20 p-3">
-                        <p className="text-xs font-semibold text-green-700 dark:text-green-400 mb-1.5">Alternativas detectadas</p>
-                        {alternatives.map((alt, i) => (
-                          <p key={i} className="text-sm text-muted-foreground">
-                            {alt.name}: <span className="font-medium font-mono">${alt.avg_price?.toLocaleString("es-CO")}</span>
-                          </p>
+                        <p className="text-xs font-semibold text-green-700 dark:text-green-400 mb-1.5">Alternativas</p>
+                        {alts.map((a, i) => (
+                          <p key={i} className="text-sm text-muted-foreground">{a.name}: <span className="font-medium font-mono">${a.avg_price?.toLocaleString("es-CO")}</span></p>
                         ))}
                       </div>
                     )}
@@ -538,7 +684,7 @@ export default function AgentsPage() {
             <div className="rounded-2xl border border-dashed border-green-500/30 p-8 text-center">
               <CheckCircle2 className="h-10 w-10 text-green-500 mx-auto mb-3" />
               <p className="font-semibold">Sin hallazgos</p>
-              <p className="text-sm text-muted-foreground mt-1">No se detectaron anomalías en esta ejecución.</p>
+              <p className="text-sm text-muted-foreground mt-1">No se detectaron anomalías.</p>
             </div>
           )}
         </div>
@@ -546,26 +692,31 @@ export default function AgentsPage() {
     );
   }
 
-  // ── Agent Detail View ────────────────────────────────────────────
+  // ── Agent Detail + Interactive Pipeline ──────────────────────────
 
   if (view === "detail" && selectedAgent) {
     const meta = AGENT_META[selectedAgent.agent_type] || AGENT_META.price_monitor;
     const Icon = meta.icon;
-    const actions = PREDEFINED_ACTIONS[selectedAgent.agent_type] || [];
-    const agentActions = selectedAgent.config?.actions || {};
+    const pipeline = AGENT_PIPELINES[selectedAgent.agent_type] || [];
+    const pipelineConfig = selectedAgent.config?.pipeline || {};
     const agentRules: CustomRule[] = selectedAgent.config?.rules || [];
     const agentRuns = runs[selectedAgent.id] || [];
+
+    const enabledCount = pipeline.filter((n) => {
+      if (!n.configurable) return true;
+      return (pipelineConfig[n.id]?.enabled ?? true);
+    }).length;
 
     return (
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => { setView("list"); setSelectedAgent(null); }}>
+          <Button variant="ghost" size="sm" onClick={() => { setView("list"); setSelectedAgent(null); setActiveNode(null); }}>
             <ArrowLeft className="h-4 w-4 mr-1" /> Agentes
           </Button>
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${meta.gradient} shadow-xl`}>
               <Icon className="h-7 w-7 text-white" />
@@ -580,9 +731,8 @@ export default function AgentsPage() {
               <p className="text-sm text-muted-foreground mt-0.5">{meta.description}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => handleToggle(selectedAgent)}
+          <div className="flex items-center gap-3 shrink-0">
+            <button onClick={() => handleToggle(selectedAgent)}
               className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors shadow-inner ${
                 selectedAgent.is_enabled ? "bg-primary" : "bg-muted"
               }`}
@@ -591,128 +741,154 @@ export default function AgentsPage() {
                 selectedAgent.is_enabled ? "translate-x-6" : "translate-x-1"
               }`} />
             </button>
-            <Button
-              onClick={() => handleTrigger(selectedAgent.id)}
-              disabled={triggering === selectedAgent.id}
+            <Button onClick={() => handleTrigger(selectedAgent.id)} disabled={triggering === selectedAgent.id}
               className="gradient-brand border-0 text-white shadow-lg"
             >
-              {triggering === selectedAgent.id ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
-              Ejecutar
+              {triggering === selectedAgent.id
+                ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                : <Play className="h-4 w-4 mr-2" />
+              }
+              Ejecutar pipeline
             </Button>
           </div>
         </div>
 
-        {/* ── Visual Workflow Canvas ───────────────────────────── */}
-        <div className="relative rounded-3xl border border-border/50 bg-muted/20 dark:bg-muted/10 overflow-hidden">
-          {/* Dot grid background */}
-          <div className="absolute inset-0 opacity-30 dark:opacity-20" style={{
+        {/* ── Interactive Pipeline Canvas ──────────────────────── */}
+        <div className="relative rounded-3xl border border-border/50 overflow-hidden">
+          {/* Dot grid */}
+          <div className="absolute inset-0 opacity-[0.08]" style={{
             backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
+            backgroundSize: "20px 20px",
           }} />
 
-          <div className="relative p-6">
-            <div className="flex items-center gap-2 mb-5">
-              <Workflow className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pipeline de ejecución</h3>
-            </div>
-
-            {/* Nodes flow */}
-            <div className="flex items-center gap-0 overflow-x-auto pb-4 px-2">
-              {meta.nodes.map((node, i) => (
-                <div key={node.id} className="flex items-center shrink-0">
-                  <WorkflowNodeCard node={node} isActive={triggering === selectedAgent.id} />
-                  {i < meta.nodes.length - 1 && <ConnectorLine animated={triggering === selectedAgent.id} />}
+          <div className="relative p-5 sm:p-6">
+            {/* Toolbar */}
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <Workflow className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pipeline interactivo</h3>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] text-muted-foreground">
+                  <span className="font-bold text-foreground">{enabledCount}</span>/{pipeline.length} pasos activos
+                </span>
+                {/* Node type legend */}
+                <div className="hidden sm:flex items-center gap-2">
+                  {(["trigger", "condition", "action", "output"] as NodeType[]).map((t) => (
+                    <div key={t} className="flex items-center gap-1">
+                      <div className={`h-2 w-2 rounded-full ${NODE_COLORS[t].iconBg}`} />
+                      <span className="text-[10px] text-muted-foreground">{TYPE_LABELS[t]}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* ── Actions & Rules Grid ─────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Actions Panel */}
-          <div className="rounded-3xl border border-border/50 bg-card p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Zap className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-bold">Acciones del agente</h3>
-            </div>
-            <div className="space-y-2">
-              {actions.map((action) => {
-                const ActionIcon = action.icon;
-                const enabled = agentActions[action.id] !== false;
-                return (
+            {/* Execution progress bar */}
+            {executingStep >= 0 && (
+              <div className="mb-5">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[11px] font-bold text-primary flex items-center gap-1.5">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    {executingStep >= pipeline.length ? "Pipeline completado" : `Ejecutando paso ${executingStep + 1} de ${pipeline.length}...`}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {Math.round((Math.min(executingStep + 1, pipeline.length) / pipeline.length) * 100)}%
+                  </span>
+                </div>
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                   <div
-                    key={action.id}
-                    className={`flex items-center gap-3 rounded-2xl p-3 border transition-all ${
-                      enabled
-                        ? "border-primary/20 bg-primary/5"
-                        : "border-border/40 bg-muted/20 opacity-60"
-                    }`}
-                  >
-                    <div className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${
-                      enabled ? "bg-primary/15" : "bg-muted"
-                    }`}>
-                      <ActionIcon className={`h-4 w-4 ${enabled ? "text-primary" : "text-muted-foreground"}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{action.label}</p>
-                      <p className="text-[11px] text-muted-foreground">{action.description}</p>
-                    </div>
-                    <button
-                      onClick={() => handleActionToggle(selectedAgent, action.id)}
-                      className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors shrink-0 ${
-                        enabled ? "bg-primary" : "bg-muted-foreground/20"
-                      }`}
-                    >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform`}
-                        style={{ transform: `translateX(${enabled ? "20px" : "3px"})` }}
+                    className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
+                    style={{ width: `${(Math.min(executingStep + 1, pipeline.length) / pipeline.length) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Pipeline nodes */}
+            <div className="flex items-start gap-0 overflow-x-auto pb-6" onClick={() => setActiveNode(null)}>
+              {pipeline.map((node, i) => {
+                const nodeConf = pipelineConfig[node.id] || {};
+                const isEnabled = !node.configurable || (nodeConf.enabled ?? true);
+                const nodeParams = nodeConf.params || {};
+
+                const isCurrentStep = executingStep === i;
+                const isCompletedStep = executingStep > i;
+                const nextNode = pipeline[i + 1];
+                const nextEnabled = nextNode ? (!nextNode.configurable || (pipelineConfig[nextNode.id]?.enabled ?? true)) : true;
+
+                return (
+                  <div key={node.id} className="flex items-start shrink-0">
+                    <div className="relative">
+                      <PipelineNode
+                        node={node}
+                        isSelected={activeNode === node.id}
+                        isEnabled={isEnabled}
+                        isExecuting={isCurrentStep}
+                        stepIndex={i}
+                        totalSteps={pipeline.length}
+                        nodeConfig={nodeParams}
+                        onClick={() => setActiveNode(activeNode === node.id ? null : node.id)}
+                        onToggle={() => handleNodeToggle(selectedAgent, node.id)}
+                        onParamChange={(key, val) => handleNodeParam(selectedAgent, node.id, key, val)}
                       />
-                    </button>
+                      {/* Completion checkmark */}
+                      {isCompletedStep && executingStep < pipeline.length && (
+                        <div className="absolute -top-2.5 -left-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white shadow-md z-20 animate-in zoom-in duration-200">
+                          <CheckCircle2 className="h-3 w-3" />
+                        </div>
+                      )}
+                    </div>
+                    {i < pipeline.length - 1 && (
+                      <Connector active={isCurrentStep} disabled={!isEnabled || !nextEnabled} />
+                    )}
                   </div>
                 );
               })}
             </div>
-          </div>
 
-          {/* Rules Panel */}
-          <div className="rounded-3xl border border-border/50 bg-card p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <GitBranch className="h-4 w-4 text-primary" />
-                <h3 className="text-sm font-bold">Reglas de automatización</h3>
-              </div>
-              <Button
-                variant="outline" size="sm" className="h-7 text-xs rounded-xl"
-                onClick={() => handleAddRule(selectedAgent)}
-              >
-                <Plus className="h-3 w-3 mr-1" /> Nueva regla
-              </Button>
-            </div>
-
-            {agentRules.length === 0 ? (
-              <div
-                className="rounded-2xl border-2 border-dashed border-muted-foreground/15 p-8 text-center cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-all group"
-                onClick={() => handleAddRule(selectedAgent)}
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted mx-auto mb-3 group-hover:bg-primary/10 transition-colors">
-                  <GitBranch className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                </div>
-                <p className="text-sm font-medium text-muted-foreground">Sin reglas configuradas</p>
-                <p className="text-xs text-muted-foreground/60 mt-1">Crea reglas tipo "Si X entonces Y" para automatizar decisiones</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {agentRules.map((rule) => (
-                  <RuleBlock
-                    key={rule.id}
-                    rule={rule}
-                    onUpdate={(field, value) => handleUpdateRule(selectedAgent, rule.id, field, value)}
-                    onDelete={() => handleDeleteRule(selectedAgent, rule.id)}
-                  />
-                ))}
-              </div>
+            {/* Click hint */}
+            {!activeNode && executingStep < 0 && (
+              <p className="text-[11px] text-muted-foreground/60 text-center mt-1">
+                Haz clic en cualquier nodo para configurar sus parámetros
+              </p>
             )}
           </div>
+        </div>
+
+        {/* ── Rules ───────────────────────────────────────────────── */}
+        <div className="rounded-3xl border border-border/50 bg-card p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <GitBranch className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-bold">Reglas de automatización</h3>
+              <Badge variant="outline" className="text-[10px]">{agentRules.length} reglas</Badge>
+            </div>
+            <Button variant="outline" size="sm" className="h-7 text-xs rounded-xl" onClick={() => handleAddRule(selectedAgent)}>
+              <Plus className="h-3 w-3 mr-1" /> Nueva regla
+            </Button>
+          </div>
+
+          {agentRules.length === 0 ? (
+            <div className="rounded-2xl border-2 border-dashed border-muted-foreground/15 p-8 text-center cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-all group"
+              onClick={() => handleAddRule(selectedAgent)}
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted mx-auto mb-3 group-hover:bg-primary/10 transition-colors">
+                <GitBranch className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              </div>
+              <p className="text-sm font-medium text-muted-foreground">Sin reglas configuradas</p>
+              <p className="text-xs text-muted-foreground/60 mt-1">Crea condiciones "Si X entonces Y" para automatizar decisiones</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {agentRules.map((rule) => (
+                <RuleBlock key={rule.id} rule={rule}
+                  onUpdate={(f, v) => handleUpdateRule(selectedAgent, rule.id, f, v)}
+                  onDelete={() => handleDeleteRule(selectedAgent, rule.id)}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* ── Run History ─────────────────────────────────────────── */}
@@ -729,38 +905,30 @@ export default function AgentsPage() {
 
           {loadingRuns === selectedAgent.id ? (
             <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" /> Cargando historial...
+              <Loader2 className="h-4 w-4 animate-spin" /> Cargando...
             </div>
           ) : agentRuns.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-muted-foreground/15 p-6 text-center">
               <Clock className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">Sin ejecuciones todavía</p>
-              <p className="text-xs text-muted-foreground/60 mt-1">Ejecuta el agente para ver resultados aquí</p>
             </div>
           ) : (
             <div className="space-y-1.5">
               {agentRuns.slice(0, 8).map((run) => {
-                const sCfg = STATUS_CONFIG[run.status] || STATUS_CONFIG.completed;
-                const SIcon = sCfg.icon;
+                const rs = STATUS_CONFIG[run.status] || STATUS_CONFIG.completed;
+                const RI = rs.icon;
                 return (
-                  <div
-                    key={run.id}
+                  <div key={run.id} onClick={() => loadRunDetail(selectedAgent, run.id)}
                     className="flex items-center gap-3 rounded-2xl p-3 hover:bg-muted/50 cursor-pointer transition-all group"
-                    onClick={() => loadRunDetail(selectedAgent, run.id)}
                   >
                     <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${
-                      run.status === "completed" ? "bg-green-500/10" :
-                      run.status === "failed" ? "bg-red-500/10" : "bg-muted"
+                      run.status === "completed" ? "bg-green-500/10" : run.status === "failed" ? "bg-red-500/10" : "bg-muted"
                     }`}>
-                      <SIcon className={`h-4 w-4 ${sCfg.color} ${run.status === "running" ? "animate-spin" : ""}`} />
+                      <RI className={`h-4 w-4 ${rs.color} ${run.status === "running" ? "animate-spin" : ""}`} />
                     </div>
-                    <span className="text-sm flex-1 truncate">
-                      {run.findings_summary || sCfg.label}
-                    </span>
+                    <span className="text-sm flex-1 truncate">{run.findings_summary || rs.label}</span>
                     <div className="flex items-center gap-2 shrink-0">
-                      {run.findings_count > 0 && (
-                        <Badge variant="secondary" className="text-[10px] h-5 rounded-lg">{run.findings_count} hallazgos</Badge>
-                      )}
+                      {run.findings_count > 0 && <Badge variant="secondary" className="text-[10px] h-5">{run.findings_count}</Badge>}
                       <span className="text-[11px] text-muted-foreground">{formatDate(run.started_at)}</span>
                       <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
@@ -774,77 +942,65 @@ export default function AgentsPage() {
     );
   }
 
-  // ── Agent List View (Main) ──────────────────────────────────────
+  // ── List View ────────────────────────────────────────────────────
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl gradient-brand shadow-lg">
-              <Bot className="h-5 w-5 text-white" />
-            </div>
-            Agentes
-          </h1>
-          <p className="text-muted-foreground mt-1.5">Agentes autónomos con IA — configura pipelines, reglas y acciones</p>
-        </div>
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl gradient-brand shadow-lg">
+            <Bot className="h-5 w-5 text-white" />
+          </div>
+          Agentes
+        </h1>
+        <p className="text-muted-foreground mt-1.5">Configura pipelines de IA, define reglas y automatiza decisiones</p>
       </div>
 
-      {loading ? (
-        <TableSkeleton rows={2} />
-      ) : (
+      {loading ? <TableSkeleton rows={2} /> : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {agents.map((agent) => {
             const meta = AGENT_META[agent.agent_type] || AGENT_META.price_monitor;
             const Icon = meta.icon;
+            const pipeline = AGENT_PIPELINES[agent.agent_type] || [];
             const lastStatus = STATUS_CONFIG[agent.last_run_status || ""] || null;
 
             return (
-              <div
-                key={agent.id}
-                onClick={() => openAgentDetail(agent)}
+              <div key={agent.id} onClick={() => openDetail(agent)}
                 className={`group relative rounded-3xl border border-border/50 bg-card p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 hover:-translate-y-0.5 ${
                   !agent.is_enabled ? "opacity-60" : ""
                 }`}
               >
-                {/* Status indicator */}
                 <div className={`absolute top-4 right-4 h-2.5 w-2.5 rounded-full ${
                   agent.is_enabled ? "bg-green-500 shadow-lg shadow-green-500/30" : "bg-muted-foreground/30"
                 }`}>
-                  {agent.is_enabled && (
-                    <span className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-30" />
-                  )}
+                  {agent.is_enabled && <span className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-30" />}
                 </div>
 
-                {/* Agent icon */}
                 <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${meta.gradient} shadow-xl mb-4 transition-transform group-hover:scale-110`}>
                   <Icon className="h-7 w-7 text-white" />
                 </div>
 
-                {/* Info */}
                 <h3 className="text-lg font-bold mb-1">{agent.name}</h3>
                 <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{meta.description}</p>
 
-                {/* Mini workflow preview */}
+                {/* Mini pipeline */}
                 <div className="flex items-center gap-1 mb-4 opacity-60">
-                  {meta.nodes.slice(0, 5).map((node, i) => {
-                    const NodeIcon = node.icon;
-                    const style = NODE_STYLES[node.type];
+                  {pipeline.slice(0, 6).map((node, i) => {
+                    const NI = node.icon;
+                    const nc = NODE_COLORS[node.type];
                     return (
                       <div key={node.id} className="flex items-center">
-                        <div className={`flex h-6 w-6 items-center justify-center rounded-lg ${style.iconBg}`}>
-                          <NodeIcon className="h-3 w-3 text-white" />
+                        <div className={`flex h-6 w-6 items-center justify-center rounded-lg ${nc.iconBg}`}>
+                          <NI className="h-3 w-3 text-white" />
                         </div>
-                        {i < 4 && i < meta.nodes.length - 1 && (
-                          <ArrowRight className="h-2.5 w-2.5 text-muted-foreground/40 mx-0.5" />
-                        )}
+                        {i < pipeline.length - 1 && i < 5 && <ArrowRight className="h-2.5 w-2.5 text-muted-foreground/40 mx-0.5" />}
                       </div>
                     );
                   })}
                 </div>
 
-                {/* Footer stats */}
                 <div className="flex items-center gap-3 pt-3 border-t border-border/40">
+                  <span className="text-[11px] text-muted-foreground">{pipeline.length} pasos</span>
                   {lastStatus && (
                     <div className="flex items-center gap-1.5">
                       <lastStatus.icon className={`h-3.5 w-3.5 ${lastStatus.color}`} />
@@ -852,7 +1008,7 @@ export default function AgentsPage() {
                     </div>
                   )}
                   {agent.last_run_findings != null && agent.last_run_findings > 0 && (
-                    <Badge variant="secondary" className="text-[10px] h-5 rounded-lg">{agent.last_run_findings} hallazgos</Badge>
+                    <Badge variant="secondary" className="text-[10px] h-5">{agent.last_run_findings} hallazgos</Badge>
                   )}
                   <div className="ml-auto">
                     <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
