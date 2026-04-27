@@ -100,8 +100,6 @@ export default function AlertsPage() {
     setGenerating(true);
     try {
       await api.post("/alerts/generate", {});
-      // Wait a bit for the Celery task to process, then poll
-      await new Promise((r) => setTimeout(r, 3000));
       await fetchAlerts();
     } catch (err) {
       console.error(err);

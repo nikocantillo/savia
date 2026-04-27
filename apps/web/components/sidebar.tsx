@@ -61,7 +61,7 @@ export function Sidebar() {
       setUserEmail(u.email || "");
     } catch {}
     fetchAlertCount();
-    const interval = setInterval(fetchAlertCount, 60000);
+    const interval = setInterval(fetchAlertCount, 15000);
     return () => clearInterval(interval);
   }, [fetchAlertCount]);
 

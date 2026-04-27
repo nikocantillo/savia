@@ -131,16 +131,26 @@ def trigger_agent(
     if not config:
         raise HTTPException(404, "Agent not found")
 
-    from app.tasks.agent_tasks import run_agent_task
-    run_agent_task.delay(str(config.id), "manual")
+    from app.services.agents import get_agent_class
 
-    return AgentRunOut(
-        id=uuid.uuid4(),
-        agent_config_id=config.id,
-        status="queued",
-        trigger="manual",
-        started_at=config.last_run_at or config.created_at,
+    agent_cls = get_agent_class(config.agent_type)
+    if not agent_cls:
+        raise HTTPException(400, f"Unknown agent type: {config.agent_type}")
+
+    agent = agent_cls(config)
+    result = agent.run(db, config.organization_id, trigger="manual")
+    db.commit()
+
+    last_run = (
+        db.query(AgentRun)
+        .filter(AgentRun.agent_config_id == config.id)
+        .order_by(AgentRun.started_at.desc())
+        .first()
     )
+    if not last_run:
+        raise HTTPException(500, "Agent run failed to persist")
+
+    return AgentRunOut.model_validate(last_run)
 
 
 @router.get("/{agent_id}/runs", response_model=list[AgentRunOut])

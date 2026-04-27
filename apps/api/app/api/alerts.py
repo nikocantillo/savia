@@ -18,10 +18,10 @@ def generate_alerts_now(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Trigger alert computation immediately for the current org."""
-    from app.tasks.alert_tasks import compute_daily_alerts
-    compute_daily_alerts.delay(str(current_user.organization_id))
-    return {"status": "queued", "message": "Generación de alertas en proceso"}
+    """Trigger alert computation immediately for the current org (synchronous)."""
+    from app.tasks.alert_tasks import run_alerts_for_org
+    run_alerts_for_org(str(current_user.organization_id))
+    return {"status": "completed", "message": "Alertas generadas exitosamente"}
 
 
 @router.get("", response_model=list[AlertOut])

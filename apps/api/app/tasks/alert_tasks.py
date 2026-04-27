@@ -45,8 +45,8 @@ def compute_daily_alerts_all_orgs():
         db.close()
 
 
-@celery_app.task(bind=True, max_retries=1)
-def compute_daily_alerts(self, org_id: str):
+def run_alerts_for_org(org_id: str):
+    """Core alert logic — can be called directly or from a Celery task."""
     db = SessionLocal()
     try:
         org = db.query(Organization).get(org_id)
@@ -55,7 +55,6 @@ def compute_daily_alerts(self, org_id: str):
             return
 
         alerts_created = 0
-        # Price increases are now handled by the PriceMonitorAgent
         alerts_created += _check_negotiated_prices(db, org)
         alerts_created += _check_new_suppliers(db, org)
         alerts_created += _check_unusual_volume(db, org)
@@ -72,9 +71,17 @@ def compute_daily_alerts(self, org_id: str):
     except Exception as exc:
         db.rollback()
         logger.exception("Failed to compute alerts for org %s", org_id)
-        raise self.retry(exc=exc)
+        raise
     finally:
         db.close()
+
+
+@celery_app.task(bind=True, max_retries=1)
+def compute_daily_alerts(self, org_id: str):
+    try:
+        run_alerts_for_org(org_id)
+    except Exception as exc:
+        raise self.retry(exc=exc)
 
 
 def _check_price_increases(db, org) -> int:
