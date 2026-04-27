@@ -18,14 +18,13 @@ from app.models import (
 logger = logging.getLogger(__name__)
 
 
-def _alert_exists_today(db, org_id, alert_type, master_item_id=None, message_contains=None):
-    today_start = datetime.now(timezone.utc).replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
+def _alert_exists_recent(db, org_id, alert_type, master_item_id=None, message_contains=None, days=7):
+    """Check if a similar alert was already created in the last N days."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     q = db.query(Alert).filter(
         Alert.organization_id == org_id,
         Alert.alert_type == alert_type,
-        Alert.created_at >= today_start,
+        Alert.created_at >= cutoff,
     )
     if master_item_id:
         q = q.filter(Alert.master_item_id == master_item_id)
@@ -116,7 +115,7 @@ def _check_price_increases(db, org) -> int:
         pct_change = float((latest.unit_price - avg_price) / avg_price * 100)
 
         if pct_change >= threshold_pct:
-            if _alert_exists_today(db, org.id, "price_increase", mi.id):
+            if _alert_exists_recent(db, org.id, "price_increase", mi.id):
                 continue
 
             alert = Alert(
@@ -185,7 +184,7 @@ def _check_negotiated_prices(db, org) -> int:
 
         if li.unit_price > neg.price:
             pct_over = float((li.unit_price - neg.price) / neg.price * 100)
-            if _alert_exists_today(db, org.id, "negotiated_price_exceeded", li.master_item_id):
+            if _alert_exists_recent(db, org.id, "negotiated_price_exceeded", li.master_item_id):
                 continue
 
             mi = db.query(MasterItem).get(li.master_item_id)
@@ -234,7 +233,7 @@ def _check_new_suppliers(db, org) -> int:
     for (name,) in recent_supplier_names:
         if name.lower() in known_suppliers:
             continue
-        if _alert_exists_today(db, org.id, "new_supplier", message_contains=name):
+        if _alert_exists_recent(db, org.id, "new_supplier", message_contains=name):
             continue
 
         alert = Alert(
@@ -299,7 +298,7 @@ def _check_unusual_volume(db, org) -> int:
         pct_diff = float((recent_qty - avg_qty_30d) / avg_qty_30d * 100)
 
         if abs(pct_diff) >= 50:
-            if _alert_exists_today(db, org.id, "unusual_volume", mi.id):
+            if _alert_exists_recent(db, org.id, "unusual_volume", mi.id):
                 continue
 
             direction = "aumentó" if pct_diff > 0 else "disminuyó"
@@ -351,7 +350,7 @@ def _check_low_margin(db, org) -> int:
     margin_pct = 100.0 - food_cost_pct
 
     if food_cost_pct > target:
-        if _alert_exists_today(db, org.id, "low_margin"):
+        if _alert_exists_recent(db, org.id, "low_margin"):
             return 0
 
         alert = Alert(

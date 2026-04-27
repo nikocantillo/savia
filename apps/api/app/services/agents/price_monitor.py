@@ -178,22 +178,25 @@ class PriceMonitorAgent(BaseAgent):
     # ── Step 3: Act ─────────────────────────────────────────────────
 
     def act(self, db: Session, org_id: UUID, findings: list[Finding]) -> int:
+        from datetime import datetime, timezone
         actions = 0
+        cooldown = timedelta(days=self.lookback_days)
+        cutoff = datetime.now(timezone.utc) - cooldown
 
         for f in findings:
             if f.severity in ("warning", "critical"):
                 master_item_id = f.data.get("master_item_id")
-                existing = (
+                recent_alert = (
                     db.query(Alert)
                     .filter(
                         Alert.organization_id == org_id,
                         Alert.alert_type == "price_increase",
                         Alert.master_item_id == master_item_id,
-                        Alert.is_read == False,
+                        Alert.created_at >= cutoff,
                     )
                     .first()
                 )
-                if existing:
+                if recent_alert:
                     continue
 
                 alert = Alert(

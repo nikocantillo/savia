@@ -246,23 +246,27 @@ class SupplierEvalAgent(BaseAgent):
     # ── Step 3: Act ─────────────────────────────────────────────────
 
     def act(self, db: Session, org_id: UUID, findings: list[Finding]) -> int:
+        from datetime import datetime, timezone
         actions = 0
+        cooldown = timedelta(days=self.lookback_days)
+        cutoff = datetime.now(timezone.utc) - cooldown
+
         for f in findings:
             if f.severity != "critical":
                 continue
 
             supplier_name = f.data.get("supplier_name", "")
-            existing = (
+            recent_alert = (
                 db.query(Alert)
                 .filter(
                     Alert.organization_id == org_id,
                     Alert.alert_type == "supplier_issue",
                     Alert.message.contains(supplier_name),
-                    Alert.is_read == False,
+                    Alert.created_at >= cutoff,
                 )
                 .first()
             )
-            if existing:
+            if recent_alert:
                 continue
 
             alert = Alert(
