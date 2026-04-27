@@ -20,6 +20,7 @@ import {
   Store,
   Settings,
   Brain,
+  Bot,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -32,6 +33,7 @@ const navItems = [
   { href: "/branches", label: "Sucursales y Ventas", icon: Store },
   { href: "/prices", label: "Precios", icon: TrendingUp },
   { href: "/reports", label: "Reportes", icon: BarChart3 },
+  { href: "/agents", label: "Agentes", icon: Bot },
   { href: "/chat", label: "Sabia IA", icon: MessageSquare },
   { href: "/alerts", label: "Alertas", icon: Bell },
   { href: "/settings", label: "Configuración", icon: Settings },

@@ -16,6 +16,7 @@ celery_app = Celery(
         "app.tasks.invoice_tasks",
         "app.tasks.alert_tasks",
         "app.tasks.notification_tasks",
+        "app.tasks.agent_tasks",
     ],
 )
 
@@ -39,5 +40,9 @@ celery_app.conf.beat_schedule = {
     "daily-email-summary": {
         "task": "app.tasks.notification_tasks.send_daily_summaries",
         "schedule": crontab(hour=8, minute=0),
+    },
+    "daily-agent-run": {
+        "task": "app.tasks.agent_tasks.run_all_scheduled_agents",
+        "schedule": crontab(hour=7, minute=15),
     },
 }

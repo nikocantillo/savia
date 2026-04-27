@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from sqlalchemy import (
     String, Text, Float, Boolean, Date, DateTime, Numeric, Integer,
-    ForeignKey, func, UniqueConstraint,
+    ForeignKey, func, UniqueConstraint, JSON,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -357,3 +357,85 @@ class NotificationLog(Base):
     sent_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+
+# ── Agent Config ─────────────────────────────────────────────────────
+
+class AgentConfig(Base):
+    __tablename__ = "agent_configs"
+    __table_args__ = (
+        UniqueConstraint("organization_id", "agent_type", name="uq_agent_org_type"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    organization_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False
+    )
+    agent_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    config: Mapped[dict | None] = mapped_column(JSON, default=dict)
+    schedule: Mapped[str] = mapped_column(String(50), default="after_invoice")
+    last_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    organization: Mapped["Organization"] = relationship()
+    runs: Mapped[list["AgentRun"]] = relationship(
+        back_populates="agent_config", cascade="all, delete-orphan",
+        order_by="AgentRun.started_at.desc()",
+    )
+
+
+# ── Agent Run ────────────────────────────────────────────────────────
+
+class AgentRun(Base):
+    __tablename__ = "agent_runs"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    agent_config_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("agent_configs.id"), nullable=False
+    )
+    status: Mapped[str] = mapped_column(String(20), default="running")
+    trigger: Mapped[str] = mapped_column(String(50), default="manual")
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    findings_summary: Mapped[str | None] = mapped_column(Text)
+    findings_count: Mapped[int] = mapped_column(Integer, default=0)
+    actions_count: Mapped[int] = mapped_column(Integer, default=0)
+    error_message: Mapped[str | None] = mapped_column(Text)
+
+    agent_config: Mapped["AgentConfig"] = relationship(back_populates="runs")
+    findings: Mapped[list["AgentFinding"]] = relationship(
+        back_populates="agent_run", cascade="all, delete-orphan",
+        order_by="AgentFinding.created_at.desc()",
+    )
+
+
+# ── Agent Finding ────────────────────────────────────────────────────
+
+class AgentFinding(Base):
+    __tablename__ = "agent_findings"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    agent_run_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("agent_runs.id"), nullable=False
+    )
+    severity: Mapped[str] = mapped_column(String(20), default="info")
+    title: Mapped[str] = mapped_column(String(500), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    data: Mapped[dict | None] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    agent_run: Mapped["AgentRun"] = relationship(back_populates="findings")

@@ -287,3 +287,46 @@ export interface OnboardingStatus {
   branches_count: number;
   suppliers_count: number;
 }
+
+// ── Agent types ────────────────────────────────────────────────────
+
+export interface AgentConfig {
+  id: string;
+  organization_id: string;
+  agent_type: string;
+  name: string;
+  is_enabled: boolean;
+  config: Record<string, any> | null;
+  schedule: string;
+  last_run_at: string | null;
+  created_at: string;
+  last_run_status: string | null;
+  last_run_findings: number | null;
+}
+
+export interface AgentRun {
+  id: string;
+  agent_config_id: string;
+  status: string;
+  trigger: string;
+  started_at: string;
+  finished_at: string | null;
+  findings_summary: string | null;
+  findings_count: number;
+  actions_count: number;
+  error_message: string | null;
+}
+
+export interface AgentFinding {
+  id: string;
+  agent_run_id: string;
+  severity: string;
+  title: string;
+  description: string | null;
+  data: Record<string, any> | null;
+  created_at: string;
+}
+
+export interface AgentRunDetail extends AgentRun {
+  findings: AgentFinding[];
+}

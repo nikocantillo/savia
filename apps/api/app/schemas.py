@@ -408,3 +408,58 @@ class OnboardingUpdate(BaseModel):
     alert_threshold_pct: float | None = None
     branches: list[str] = []
     onboarding_completed: bool = True
+
+
+# ── Agents ─────────────────────────────────────────────────────────
+
+class AgentConfigOut(BaseModel):
+    model_config = {"from_attributes": True}
+
+    id: uuid.UUID
+    organization_id: uuid.UUID
+    agent_type: str
+    name: str
+    is_enabled: bool
+    config: dict | None = None
+    schedule: str
+    last_run_at: datetime | None = None
+    created_at: datetime
+    last_run_status: str | None = None
+    last_run_findings: int | None = None
+
+
+class AgentConfigUpdate(BaseModel):
+    is_enabled: bool | None = None
+    config: dict | None = None
+    schedule: str | None = None
+
+
+class AgentRunOut(BaseModel):
+    model_config = {"from_attributes": True}
+
+    id: uuid.UUID
+    agent_config_id: uuid.UUID
+    status: str
+    trigger: str
+    started_at: datetime
+    finished_at: datetime | None = None
+    findings_summary: str | None = None
+    findings_count: int = 0
+    actions_count: int = 0
+    error_message: str | None = None
+
+
+class AgentFindingOut(BaseModel):
+    model_config = {"from_attributes": True}
+
+    id: uuid.UUID
+    agent_run_id: uuid.UUID
+    severity: str
+    title: str
+    description: str | None = None
+    data: dict | None = None
+    created_at: datetime
+
+
+class AgentRunDetailOut(AgentRunOut):
+    findings: list[AgentFindingOut] = []

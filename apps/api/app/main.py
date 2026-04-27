@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.database import get_db
-from app.api import auth, invoices, dashboard, items, alerts, agent, reports, suppliers, payments, branches, sales, margin, notifications
+from app.api import auth, invoices, dashboard, items, alerts, agent, agents, reports, suppliers, payments, branches, sales, margin, notifications
 
 settings = get_settings()
 
@@ -35,6 +35,7 @@ app.include_router(dashboard.router)
 app.include_router(items.router)
 app.include_router(alerts.router)
 app.include_router(agent.router)
+app.include_router(agents.router)
 app.include_router(reports.router)
 app.include_router(suppliers.router)
 app.include_router(payments.router)

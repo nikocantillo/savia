@@ -205,6 +205,13 @@ def process_invoice_upload(self, invoice_id: str):
         except Exception as e:
             logger.warning("Alert computation trigger failed (non-fatal): %s", e)
 
+        # ── Step 7: Trigger autonomous agents ────────────────────────
+        try:
+            from app.tasks.agent_tasks import run_org_agents
+            run_org_agents.delay(str(invoice.organization_id), "after_invoice")
+        except Exception as e:
+            logger.warning("Agent trigger failed (non-fatal): %s", e)
+
     except Exception as exc:
         db.rollback()
         logger.exception("❌ Failed to process invoice %s", invoice_id)
